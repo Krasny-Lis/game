@@ -1,0 +1,60 @@
+<div class="layout">
+  <section class="settings">
+    <h1>Slots Mini-Game</h1>
+    <form [formGroup]="form" class="form-grid">
+      <label>
+        Falling Speed
+        <input type="number" formControlName="fallingSpeed" min="0" step="0.5" />
+        <small *ngIf="form.get('fallingSpeed')?.invalid && form.get('fallingSpeed')?.touched">Provide a non-negative speed.</small>
+      </label>
+      <label>
+        Falling Frequency (ms)
+        <input type="number" formControlName="fallingFrequency" min="100" step="50" />
+        <small *ngIf="form.get('fallingFrequency')?.invalid && form.get('fallingFrequency')?.touched">Delay between objects.</small>
+      </label>
+      <label>
+        Player Speed
+        <input type="number" formControlName="playerSpeed" min="1" step="1" />
+        <small *ngIf="form.get('playerSpeed')?.invalid && form.get('playerSpeed')?.touched">Speed must be positive.</small>
+      </label>
+      <label>
+        Game Time (s)
+        <input type="number" formControlName="gameTime" min="5" step="1" />
+        <small *ngIf="form.get('gameTime')?.invalid && form.get('gameTime')?.touched">Duration must be at least 5 seconds.</small>
+      </label>
+      <div class="actions">
+        <button type="button" (click)="start()" [disabled]="form.invalid">Start</button>
+        <button type="button" class="secondary" (click)="stop()">Stop</button>
+      </div>
+    </form>
+    <div class="socket" *ngIf="socketPayload">
+      <h3>Pseudo WebSocket Feed</h3>
+      <p><strong>Caught objects:</strong> {{ socketPayload?.caughtObjects }}</p>
+      <p><strong>Time remaining:</strong> {{ socketPayload?.timeRemaining }}s</p>
+    </div>
+  </section>
+
+  <section class="game-panel" *ngIf="snapshot as game">
+    <header>
+      <div><strong>Score:</strong> {{ game.score }}</div>
+      <div><strong>Time:</strong> {{ game.timeRemaining }}s</div>
+      <div class="status" [class.running]="game.running">{{ game.running ? 'Running' : 'Stopped' }}</div>
+    </header>
+    <div
+      class="game-area"
+      [style.width.px]="gameService.dimensions.width"
+      [style.height.px]="gameService.dimensions.height"
+    >
+      <div class="player" [style.left.px]="game.playerX" [style.width.px]="gameService.dimensions.playerWidth"></div>
+      <div
+        class="object"
+        *ngFor="let obj of game.objects; trackBy: trackByObject"
+        [style.left.px]="obj.x"
+        [style.top.px]="obj.y"
+        [style.width.px]="gameService.dimensions.objectRadius * 2"
+        [style.height.px]="gameService.dimensions.objectRadius * 2"
+      ></div>
+    </div>
+    <p class="hint">Use the left/right arrow keys to move. Changing the settings updates the game instantly; altering the game time restarts the round.</p>
+  </section>
+</div>
