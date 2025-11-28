@@ -172,4 +172,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.gameService.stopGame();
     this.gameSocketService.stop();
   }
+
+  handleBlur(): void {
+    this.gameService.updateDirection(0);
+  }
 }
