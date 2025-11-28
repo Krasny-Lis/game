@@ -66,8 +66,7 @@ export class GameService implements OnDestroy {
 
   private tickingInitialized = false;
 
-  constructor(private readonly destroyRef: DestroyRef) {
-  }
+  constructor(private readonly destroyRef: DestroyRef) {}
 
   updateSettings(partial: Partial<GameSettings>): void {
     const current = this.settings$.value;
@@ -128,7 +127,8 @@ export class GameService implements OnDestroy {
     const remainingObjects = updated.map((object) => {
       const reachedPlayer =
         object.y + GAME_DIMENSIONS.objectRadius >=
-        GAME_DIMENSIONS.height - 24;
+        GAME_DIMENSIONS.height -
+          (GAME_DIMENSIONS.playerHeight + GAME_DIMENSIONS.playerOffset);
       const overlapX =
         object.x >= playerX - GAME_DIMENSIONS.objectRadius &&
         object.x <=
@@ -181,7 +181,7 @@ export class GameService implements OnDestroy {
     this.timeRemaining$.next(remaining - 1);
   }
 
-  startTicking(): void {
+  private startTicking(): void {
     if (this.tickingInitialized) {
       return;
     }

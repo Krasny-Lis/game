@@ -89,7 +89,13 @@
       (keydown)="handleKeyDown($event)"
       (keyup)="handleKeyUp($event)"
     >
-      <div class="player" [style.left.px]="game.playerX" [style.width.px]="gameService.dimensions.playerWidth"></div>
+      <div
+        class="player"
+        [style.left.px]="game.playerX"
+        [style.width.px]="gameService.dimensions.playerWidth"
+        [style.height.px]="gameService.dimensions.playerHeight"
+        [style.bottom.px]="gameService.dimensions.playerOffset"
+      ></div>
       <div
         class="object"
         *ngFor="let obj of game.objects; trackBy: trackByObject"
