@@ -27,14 +27,14 @@
         <button type="button" class="secondary" (click)="stop()">Stop</button>
       </div>
     </form>
-    <div class="socket" *ngIf="socketPayload">
+    <div class="socket" *ngIf="socketPayload$ | async as socketPayload">
       <h3>Pseudo WebSocket Feed</h3>
-      <p><strong>Caught objects:</strong> {{ socketPayload?.caughtObjects }}</p>
-      <p><strong>Time remaining:</strong> {{ socketPayload?.timeRemaining }}s</p>
+      <p><strong>Caught objects:</strong> {{ socketPayload.caughtObjects }}</p>
+      <p><strong>Time remaining:</strong> {{ socketPayload.timeRemaining }}s</p>
     </div>
   </section>
 
-  <section class="game-panel" *ngIf="snapshot as game">
+  <section class="game-panel" *ngIf="snapshot$ | async as game">
     <header>
       <div><strong>Score:</strong> {{ game.score }}</div>
       <div><strong>Time:</strong> {{ game.timeRemaining }}s</div>

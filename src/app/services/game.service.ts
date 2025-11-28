@@ -1,24 +1,31 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, Subscription, combineLatest, interval, map, takeWhile, tap } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, Subject, combineLatest, filter, interval, map, switchMap, takeUntil, tap } from 'rxjs';
 import { FallingObject, GameSettings, GameSnapshot } from '../models/game.models';
 
 const GAME_WIDTH = 480;
 const GAME_HEIGHT = 320;
 const PLAYER_WIDTH = 60;
 const OBJECT_RADIUS = 12;
+const TICK_MS = 16;
+
+type Dimensions = { width: number; height: number; playerWidth: number; objectRadius: number };
+
+type Direction = -1 | 0 | 1;
+
+const isSettings = (settings: GameSettings | null): settings is GameSettings => settings !== null;
 
 @Injectable({ providedIn: 'root' })
 export class GameService implements OnDestroy {
-  private settings$ = new BehaviorSubject<GameSettings | null>(null);
-  private playerX$ = new BehaviorSubject<number>(GAME_WIDTH / 2 - PLAYER_WIDTH / 2);
-  private objects$ = new BehaviorSubject<FallingObject[]>([]);
-  private score$ = new BehaviorSubject<number>(0);
-  private timeRemaining$ = new BehaviorSubject<number>(0);
-  private running$ = new BehaviorSubject<boolean>(false);
+  private readonly settings$ = new BehaviorSubject<GameSettings | null>(null);
+  private readonly playerX$ = new BehaviorSubject<number>(GAME_WIDTH / 2 - PLAYER_WIDTH / 2);
+  private readonly objects$ = new BehaviorSubject<FallingObject[]>([]);
+  private readonly score$ = new BehaviorSubject<number>(0);
+  private readonly timeRemaining$ = new BehaviorSubject<number>(0);
+  private readonly running$ = new BehaviorSubject<boolean>(false);
+  private readonly direction$ = new BehaviorSubject<Direction>(0);
+  private readonly destroy$ = new Subject<void>();
 
-  private spawnSub?: Subscription;
-  private tickSub?: Subscription;
-  private timerSub?: Subscription;
+  private readonly activeSettings$ = this.settings$.pipe(filter(isSettings));
 
   readonly snapshot$: Observable<GameSnapshot> = combineLatest([
     this.objects$,
@@ -36,93 +43,90 @@ export class GameService implements OnDestroy {
     }))
   );
 
-  get dimensions(): { width: number; height: number; playerWidth: number; objectRadius: number } {
+  private readonly tickSub = combineLatest([this.activeSettings$, this.running$])
+    .pipe(
+      switchMap(([settings, running]) =>
+        running
+          ? interval(TICK_MS).pipe(
+              tap(() => this.advanceFrame(settings)),
+              takeUntil(this.destroy$)
+            )
+          : EMPTY
+      )
+    )
+    .subscribe();
+
+  private readonly spawnSub = combineLatest([this.activeSettings$, this.running$])
+    .pipe(
+      switchMap(([settings, running]) =>
+        running
+          ? interval(settings.fallingFrequency).pipe(
+              tap(() => this.spawnObject()),
+              takeUntil(this.destroy$)
+            )
+          : EMPTY
+      )
+    )
+    .subscribe();
+
+  private readonly timerSub = combineLatest([this.activeSettings$, this.running$])
+    .pipe(
+      switchMap(([settings, running]) =>
+        running
+          ? interval(1000).pipe(
+              tap((elapsed) => this.updateTimer(settings, elapsed + 1)),
+              takeUntil(this.destroy$)
+            )
+          : EMPTY
+      )
+    )
+    .subscribe();
+
+  get dimensions(): Dimensions {
     return { width: GAME_WIDTH, height: GAME_HEIGHT, playerWidth: PLAYER_WIDTH, objectRadius: OBJECT_RADIUS };
   }
 
   updateSettings(partial: Partial<GameSettings>): void {
-    const nextSettings = { ...this.settings$.value, ...partial } as GameSettings;
+    const current = this.settings$.value;
+    if (!current) {
+      return;
+    }
+    const nextSettings: GameSettings = { ...current, ...partial };
     this.settings$.next(nextSettings);
 
-    if (this.running$.value && nextSettings) {
-      this.startTicking();
-      this.startSpawning();
+    if (partial.gameTime !== undefined) {
+      this.timeRemaining$.next(Math.max(partial.gameTime, 0));
     }
   }
 
   startGame(settings: GameSettings): void {
-    this.settings$.next(settings);
-    this.resetState(settings.gameTime);
+    this.settings$.next({ ...settings });
+    this.resetState(settings);
     this.running$.next(true);
-    this.startTicking();
-    this.startSpawning();
-    this.startTimer();
+    this.direction$.next(0);
   }
 
   stopGame(): void {
     this.running$.next(false);
-    this.clearSubscriptions();
+    this.direction$.next(0);
   }
 
-  movePlayer(direction: -1 | 0 | 1): void {
-    const settings = this.settings$.value;
-    if (!settings || !this.running$.value) {
+  updateDirection(direction: Direction): void {
+    if (!this.running$.value) {
       return;
     }
-    const nextX = this.playerX$.value + direction * settings.playerSpeed;
-    const clamped = Math.max(0, Math.min(GAME_WIDTH - PLAYER_WIDTH, nextX));
-    this.playerX$.next(clamped);
+    this.direction$.next(direction);
   }
 
-  private startTicking(): void {
-    this.tickSub?.unsubscribe();
-    this.tickSub = interval(16)
-      .pipe(takeWhile(() => this.running$.value))
-      .subscribe(() => this.tick());
-  }
-
-  private startSpawning(): void {
-    const settings = this.settings$.value;
-    if (!settings) {
-      return;
-    }
-    this.spawnSub?.unsubscribe();
-    this.spawnSub = interval(settings.fallingFrequency)
-      .pipe(takeWhile(() => this.running$.value))
-      .subscribe(() => this.spawnObject());
-  }
-
-  private startTimer(): void {
-    const settings = this.settings$.value;
-    if (!settings) {
-      return;
-    }
-    this.timerSub?.unsubscribe();
-    this.timerSub = interval(1000)
-      .pipe(
-        takeWhile(() => this.running$.value),
-        tap((elapsed) => this.timeRemaining$.next(settings.gameTime - (elapsed + 1)))
-      )
-      .subscribe(() => {
-        if (this.timeRemaining$.value <= 0) {
-          this.stopGame();
-        }
-      });
-  }
-
-  private resetState(gameTime: number): void {
+  private resetState(settings: GameSettings): void {
     this.objects$.next([]);
     this.score$.next(0);
-    this.timeRemaining$.next(gameTime);
+    this.timeRemaining$.next(settings.gameTime);
     this.playerX$.next(GAME_WIDTH / 2 - PLAYER_WIDTH / 2);
-    this.clearSubscriptions();
   }
 
-  private tick(): void {
-    const settings = this.settings$.value;
-    if (!settings) {
-      return;
-    }
+  private advanceFrame(settings: GameSettings): void {
+    this.movePlayer(settings);
     const updated = this.objects$.value
       .map((object) => ({ ...object, y: object.y + settings.fallingSpeed }))
       .filter((object) => object.y - OBJECT_RADIUS < GAME_HEIGHT);
@@ -144,20 +148,36 @@ export class GameService implements OnDestroy {
     this.objects$.next(remainingObjects.filter((object) => !object.caught));
   }
 
+  private movePlayer(settings: GameSettings): void {
+    const direction = this.direction$.value;
+    if (direction === 0) {
+      return;
+    }
+    const nextX = this.playerX$.value + direction * settings.playerSpeed;
+    const clamped = Math.max(0, Math.min(GAME_WIDTH - PLAYER_WIDTH, nextX));
+    this.playerX$.next(clamped);
+  }
+
   private spawnObject(): void {
-    const id = Date.now() + Math.floor(Math.random() * 1000);
     const x = Math.random() * (GAME_WIDTH - OBJECT_RADIUS * 2) + OBJECT_RADIUS;
-    const newObject: FallingObject = { id, x, y: 0, caught: false };
+    const newObject: FallingObject = { id: Date.now() + Math.floor(Math.random() * 1000), x, y: 0, caught: false };
     this.objects$.next([...this.objects$.value, newObject]);
   }
 
-  private clearSubscriptions(): void {
-    this.spawnSub?.unsubscribe();
-    this.tickSub?.unsubscribe();
-    this.timerSub?.unsubscribe();
+  private updateTimer(settings: GameSettings, elapsedSeconds: number): void {
+    const remaining = Math.max(settings.gameTime - elapsedSeconds, 0);
+    this.timeRemaining$.next(remaining);
+    if (remaining <= 0) {
+      this.stopGame();
+    }
   }
 
   ngOnDestroy(): void {
-    this.clearSubscriptions();
+    this.stopGame();
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.tickSub.unsubscribe();
+    this.spawnSub.unsubscribe();
+    this.timerSub.unsubscribe();
   }
 }

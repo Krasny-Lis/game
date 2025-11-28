@@ -1,23 +1,38 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Subscription, filter, map } from 'rxjs';
+import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Observable, Subject, distinctUntilChanged, filter, map, takeUntil } from 'rxjs';
+import { FallingObject, GameSettings, GameSnapshot, SocketPayload } from './models/game.models';
 import { GameService } from './services/game.service';
 import { GameSocketService } from './services/game-socket.service';
-import { FallingObject, GameSettings, GameSnapshot, SocketPayload } from './models/game.models';
+
+type GameSettingsForm = {
+  fallingSpeed: FormControl<number>;
+  fallingFrequency: FormControl<number>;
+  playerSpeed: FormControl<number>;
+  gameTime: FormControl<number>;
+};
+
+const settingsEqual = (a: GameSettings, b: GameSettings): boolean =>
+  a.fallingSpeed === b.fallingSpeed &&
+  a.fallingFrequency === b.fallingFrequency &&
+  a.playerSpeed === b.playerSpeed &&
+  a.gameTime === b.gameTime;
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements OnInit, OnDestroy {
-  form: FormGroup;
-  snapshot?: GameSnapshot;
-  socketPayload?: SocketPayload;
-  private subs: Subscription[] = [];
+  readonly snapshot$: Observable<GameSnapshot> = this.gameService.snapshot$;
+  socketPayload$?: Observable<SocketPayload>;
+  form: FormGroup<GameSettingsForm>;
+
+  private readonly destroy$ = new Subject<void>();
   private lastGameTime: number | null = null;
 
   constructor(
@@ -25,32 +40,23 @@ export class AppComponent implements OnInit, OnDestroy {
     readonly gameService: GameService,
     private readonly gameSocketService: GameSocketService
   ) {
-    this.form = this.fb.group({
-      fallingSpeed: [2, [Validators.required, Validators.min(0.5)]],
-      fallingFrequency: [800, [Validators.required, Validators.min(100)]],
-      playerSpeed: [8, [Validators.required, Validators.min(1)]],
-      gameTime: [30, [Validators.required, Validators.min(5)]]
+    this.form = this.fb.nonNullable.group({
+      fallingSpeed: this.fb.nonNullable.control(2, [Validators.required, Validators.min(0.5)]),
+      fallingFrequency: this.fb.nonNullable.control(800, [Validators.required, Validators.min(100)]),
+      playerSpeed: this.fb.nonNullable.control(8, [Validators.required, Validators.min(1)]),
+      gameTime: this.fb.nonNullable.control(30, [Validators.required, Validators.min(5)])
     });
   }
 
   ngOnInit(): void {
-    this.subs.push(
-      this.gameService.snapshot$.subscribe((snapshot) => {
-        this.snapshot = snapshot;
-        if (!snapshot.running) {
-          this.gameSocketService.stop();
-        }
-      })
-    );
-
-    this.subs.push(
-      this.form.valueChanges.subscribe((value) => {
-        if (this.form.valid) {
-          const settings = value as GameSettings;
-          this.applySettings(settings);
-        }
-      })
-    );
+    this.form.valueChanges
+      .pipe(
+        filter(() => this.form.valid),
+        map(() => this.form.getRawValue() as GameSettings),
+        distinctUntilChanged(settingsEqual),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((settings) => this.applySettings(settings));
   }
 
   start(): void {
@@ -58,18 +64,15 @@ export class AppComponent implements OnInit, OnDestroy {
       this.form.markAllAsTouched();
       return;
     }
-    const settings = this.form.value as GameSettings;
+    const settings = this.form.getRawValue() as GameSettings;
     this.lastGameTime = settings.gameTime;
     this.gameService.startGame(settings);
-    this.subs.push(
-      this.gameSocketService
-        .connect(
-          this.gameService.snapshot$.pipe(
-            filter((snapshot) => snapshot.running),
-            map((snapshot) => ({ caughtObjects: snapshot.score, timeRemaining: snapshot.timeRemaining }))
-          )
-        )
-        .subscribe((payload) => (this.socketPayload = payload))
+    this.socketPayload$ = this.gameSocketService.connect(
+      this.snapshot$.pipe(
+        filter((snapshot) => snapshot.running),
+        map((snapshot) => ({ caughtObjects: snapshot.score, timeRemaining: snapshot.timeRemaining })),
+        distinctUntilChanged((a, b) => a.caughtObjects === b.caughtObjects && a.timeRemaining === b.timeRemaining)
+      )
     );
   }
 
@@ -89,17 +92,17 @@ export class AppComponent implements OnInit, OnDestroy {
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'ArrowLeft') {
-      this.gameService.movePlayer(-1);
+      this.gameService.updateDirection(-1);
     }
     if (event.key === 'ArrowRight') {
-      this.gameService.movePlayer(1);
+      this.gameService.updateDirection(1);
     }
   }
 
   @HostListener('window:keyup', ['$event'])
   handleKeyUp(event: KeyboardEvent): void {
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-      this.gameService.movePlayer(0);
+      this.gameService.updateDirection(0);
     }
   }
 
@@ -108,7 +111,8 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.subs.forEach((sub) => sub.unsubscribe());
+    this.destroy$.next();
+    this.destroy$.complete();
     this.gameService.stopGame();
     this.gameSocketService.stop();
   }
