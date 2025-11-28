@@ -37,8 +37,8 @@
     border: 1px solid lighten(palette.$border-color, 10%);
 
     &:focus-visible {
-      outline: 2.08px solid palette.$primary-color;
-      outline-offset: 2.08px;
+      outline: 2px solid palette.$primary-color;
+      outline-offset: 2px;
       border-color: palette.$primary-color;
     }
   }
@@ -61,8 +61,8 @@
       cursor: pointer;
 
       &:focus-visible {
-        outline: 2.08px solid darken(palette.$primary-color, 5%);
-        outline-offset: 2.08px;
+        outline: 2px solid darken(palette.$primary-color, 5%);
+        outline-offset: 2px;
       }
 
       &.secondary {
@@ -107,8 +107,8 @@
     overflow: hidden;
 
     &:focus-visible {
-      outline: 2.08px solid lighten(palette.$primary-color, 5%);
-      outline-offset: 2.08px;
+      outline: 2px solid lighten(palette.$primary-color, 5%);
+      outline-offset: 2px;
     }
   }
 
@@ -134,7 +134,7 @@
 .socket {
   margin-top: 1rem;
   padding: 0.63rem;
-  border-radius: 6.08px;
+  border-radius: 6px;
   background: palette.$socket-background;
   border: 1px solid palette.$socket-border;
 }
