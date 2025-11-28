@@ -1,45 +1,44 @@
 @use "../styles/palette";
-@use "../styles/spacing";
 
 :host {
   font-family: Arial, Helvetica, sans-serif;
   display: block;
-  padding: spacing.$space-xl;
+  padding: 1rem;
   color: #0f172a;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: spacing.$space-xl;
+  grid-template-columns: 20rem 1fr;
+  gap: 1rem;
 
   .settings {
-    padding: spacing.$space-lg;
-    border: 1px solid palette.$border-color;
-    border-radius: 8px;
+    padding: 0.75rem;
+    border: 0.0625rem solid palette.$border-color;
+    border-radius: 0.5rem;
     background: palette.$background-light;
   }
 
   .form-grid {
     display: grid;
-    gap: spacing.$space-md;
+    gap: 0.625rem;
   }
 
   label {
     display: flex;
     flex-direction: column;
     font-weight: 600;
-    gap: spacing.$space-2xs;
+    gap: 0.25rem;
   }
 
   input[type="number"] {
-    padding: spacing.$space-xs;
-    border-radius: 4px;
-    border: 1px solid lighten(palette.$border-color, 10%);
+    padding: 0.375rem;
+    border-radius: 0.25rem;
+    border: 0.0625rem solid lighten(palette.$border-color, 10%);
 
     &:focus-visible {
-      outline: 2px solid palette.$primary-color;
-      outline-offset: 2px;
+      outline: 0.125rem solid palette.$primary-color;
+      outline-offset: 0.125rem;
       border-color: palette.$primary-color;
     }
   }
@@ -51,19 +50,19 @@
 
   .actions {
     display: flex;
-    gap: spacing.$space-sm;
+    gap: 0.5rem;
 
     button {
-      padding: spacing.$space-sm spacing.$space-lg;
+      padding: 0.5rem 0.75rem;
       border: none;
-      border-radius: 4px;
+      border-radius: 0.25rem;
       background: palette.$primary-color;
       color: white;
       cursor: pointer;
 
       &:focus-visible {
-        outline: 2px solid darken(palette.$primary-color, 5%);
-        outline-offset: 2px;
+        outline: 0.125rem solid darken(palette.$primary-color, 5%);
+        outline-offset: 0.125rem;
       }
 
       &.secondary {
@@ -79,20 +78,20 @@
 }
 
 .game-panel {
-  padding: spacing.$space-lg;
-  border: 1px solid palette.$border-color;
-  border-radius: 8px;
+  padding: 0.75rem;
+  border: 0.0625rem solid palette.$border-color;
+  border-radius: 0.5rem;
 
   header {
     display: flex;
-    gap: spacing.$space-lg;
+    gap: 0.75rem;
     align-items: center;
-    margin-bottom: spacing.$space-lg;
+    margin-bottom: 0.75rem;
   }
 
   .status {
-    padding: spacing.$space-2xs spacing.$space-sm;
-    border-radius: 12px;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.75rem;
     background: #f1f5f9;
 
     &.running {
@@ -102,21 +101,21 @@
 
   .game-area {
     position: relative;
-    border: 1px solid lighten(palette.$border-color, 5%);
+    border: 0.0625rem solid lighten(palette.$border-color, 5%);
     background: palette.$game-surface;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     overflow: hidden;
 
     &:focus-visible {
-      outline: 2px solid lighten(palette.$primary-color, 5%);
-      outline-offset: 2px;
+      outline: 0.125rem solid lighten(palette.$primary-color, 5%);
+      outline-offset: 0.125rem;
     }
   }
 
   .player {
     position: absolute;
     background: palette.$player-color;
-    border-radius: 4px;
+    border-radius: 0.25rem;
   }
 
   .object {
@@ -128,14 +127,14 @@
 
   .hint {
     color: palette.$muted-color;
-    margin-top: spacing.$space-md;
+    margin-top: 0.625rem;
   }
 }
 
 .socket {
-  margin-top: spacing.$space-xl;
-  padding: spacing.$space-md;
-  border-radius: 6px;
+  margin-top: 1rem;
+  padding: 0.625rem;
+  border-radius: 0.375rem;
   background: palette.$socket-background;
-  border: 1px solid palette.$socket-border;
+  border: 0.0625rem solid palette.$socket-border;
 }
