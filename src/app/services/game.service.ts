@@ -202,11 +202,13 @@ export class GameService implements OnDestroy {
   }
 
   private updateTimer(): void {
-    const remaining = Math.max(this.timeRemaining$.value - 1, 0);
-    this.timeRemaining$.next(remaining);
+    const remaining = this.timeRemaining$.value;
     if (remaining <= 0) {
       this.stopGame();
+      return;
     }
+
+    this.timeRemaining$.next(remaining - 1);
   }
 
   ngOnDestroy(): void {
