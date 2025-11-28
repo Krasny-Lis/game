@@ -1,6 +1,19 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, EMPTY, Observable, Subject, Subscription, combineLatest, interval, map, switchMap, takeUntil, tap } from 'rxjs';
-import { DEFAULT_GAME_SETTINGS, FallingObject, GameSettings, GameSnapshot } from '../models/game.models';
+import {
+  BehaviorSubject,
+  EMPTY,
+  Observable,
+  Subject,
+  Subscription,
+  combineLatest,
+  interval,
+  map,
+  shareReplay,
+  switchMap,
+  takeUntil,
+  tap
+} from 'rxjs';
+import { DEFAULT_GAME_SETTINGS, FallingObject, GameSettings, GameSnapshot, settingsEqual } from '../models/game.models';
 
 const GAME_WIDTH = 480;
 const GAME_HEIGHT = 320;
@@ -39,7 +52,8 @@ export class GameService implements OnDestroy {
       score,
       timeRemaining,
       running
-    }))
+    })),
+    shareReplay({ bufferSize: 1, refCount: true })
   );
 
   constructor() {
@@ -87,6 +101,9 @@ export class GameService implements OnDestroy {
       return;
     }
     const nextSettings: GameSettings = { ...current, ...partial };
+    if (settingsEqual(current, nextSettings)) {
+      return;
+    }
     this.settings$.next(nextSettings);
 
     if (partial.gameTime !== undefined) {

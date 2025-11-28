@@ -5,6 +5,12 @@ export interface GameSettings {
   gameTime: number;
 }
 
+export const settingsEqual = (a: GameSettings, b: GameSettings): boolean =>
+  a.fallingSpeed === b.fallingSpeed &&
+  a.fallingFrequency === b.fallingFrequency &&
+  a.playerSpeed === b.playerSpeed &&
+  a.gameTime === b.gameTime;
+
 export const DEFAULT_GAME_SETTINGS: GameSettings = {
   fallingSpeed: 2,
   fallingFrequency: 800,
