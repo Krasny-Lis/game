@@ -60,7 +60,10 @@ export class AppComponent implements OnInit, OnDestroy {
       fallingSpeed: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.fallingSpeed, [Validators.required, Validators.min(0.5)]),
       fallingFrequency: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.fallingFrequency, [Validators.required, Validators.min(100)]),
       playerSpeed: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.playerSpeed, [Validators.required, Validators.min(1)]),
-      gameTime: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.gameTime, [Validators.required, Validators.min(5)])
+      gameTime: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.gameTime, {
+        validators: [Validators.required, Validators.min(5)],
+        updateOn: 'blur'
+      })
     });
 
     this.socketPayload$ = merge(

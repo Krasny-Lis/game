@@ -5,6 +5,15 @@ export interface GameSettings {
   gameTime: number;
 }
 
+export const GAME_DIMENSIONS = {
+  width: 480,
+  height: 320,
+  playerWidth: 60,
+  objectRadius: 12
+} as const;
+
+export type GameDimensions = typeof GAME_DIMENSIONS;
+
 export const settingsEqual = (a: GameSettings, b: GameSettings): boolean =>
   a.fallingSpeed === b.fallingSpeed &&
   a.fallingFrequency === b.fallingFrequency &&
