@@ -37,8 +37,8 @@
     border: 1px solid lighten(palette.$border-color, 10%);
 
     &:focus-visible {
-      outline: 0.13rem solid palette.$primary-color;
-      outline-offset: 0.13rem;
+      outline: 2.08px solid palette.$primary-color;
+      outline-offset: 2.08px;
       border-color: palette.$primary-color;
     }
   }
@@ -61,8 +61,8 @@
       cursor: pointer;
 
       &:focus-visible {
-        outline: 0.13rem solid darken(palette.$primary-color, 5%);
-        outline-offset: 0.13rem;
+        outline: 2.08px solid darken(palette.$primary-color, 5%);
+        outline-offset: 2.08px;
       }
 
       &.secondary {
@@ -107,8 +107,8 @@
     overflow: hidden;
 
     &:focus-visible {
-      outline: 0.13rem solid lighten(palette.$primary-color, 5%);
-      outline-offset: 0.13rem;
+      outline: 2.08px solid lighten(palette.$primary-color, 5%);
+      outline-offset: 2.08px;
     }
   }
 
