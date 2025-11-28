@@ -1,15 +1,29 @@
-import { DestroyRef, Injectable, OnDestroy } from '@angular/core';
-import { Observable, Subject, map, shareReplay, switchMap, takeUntil, takeUntilDestroyed, timer, withLatestFrom } from 'rxjs';
-import { SocketPayload } from '../models/game.models';
+import { DestroyRef, Injectable, OnDestroy } from "@angular/core";
+import {
+  Observable,
+  Subject,
+  map,
+  shareReplay,
+  switchMap,
+  takeUntil,
+  timer,
+  withLatestFrom,
+} from "rxjs";
+import { SocketPayload } from "../models/game.models";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class GameSocketService implements OnDestroy {
   private readonly stopRequests$ = new Subject<number>();
 
   constructor(private readonly destroyRef: DestroyRef) {}
 
-  createPayloadStream(source$: Observable<SocketPayload>): Observable<SocketPayload> {
-    const stop$ = this.stopRequests$.pipe(switchMap((delayMs) => timer(delayMs)));
+  createPayloadStream(
+    source$: Observable<SocketPayload>
+  ): Observable<SocketPayload> {
+    const stop$ = this.stopRequests$.pipe(
+      switchMap((delayMs) => timer(delayMs))
+    );
 
     return timer(0, 1000).pipe(
       withLatestFrom(source$),
