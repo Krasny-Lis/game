@@ -9,10 +9,21 @@
           formControlName="fallingSpeed"
           min="0.5"
           step="0.5"
-          [attr.aria-invalid]="fallingSpeedControl.invalid && fallingSpeedControl.touched ? 'true' : null"
-          [attr.aria-describedby]="fallingSpeedControl.invalid && fallingSpeedControl.touched ? 'fallingSpeedError' : null"
+          [attr.aria-invalid]="
+            fallingSpeedControl.invalid && fallingSpeedControl.touched
+              ? 'true'
+              : null
+          "
+          [attr.aria-describedby]="
+            fallingSpeedControl.invalid && fallingSpeedControl.touched
+              ? 'fallingSpeedError'
+              : null
+          "
         />
-        <small id="fallingSpeedError" *ngIf="fallingSpeedControl.invalid && fallingSpeedControl.touched">
+        <small
+          id="fallingSpeedError"
+          *ngIf="fallingSpeedControl.invalid && fallingSpeedControl.touched"
+        >
           Provide a speed of at least 0.5.
         </small>
       </label>
@@ -23,12 +34,23 @@
           formControlName="fallingFrequency"
           min="100"
           step="50"
-          [attr.aria-invalid]="fallingFrequencyControl.invalid && fallingFrequencyControl.touched ? 'true' : null"
+          [attr.aria-invalid]="
+            fallingFrequencyControl.invalid && fallingFrequencyControl.touched
+              ? 'true'
+              : null
+          "
           [attr.aria-describedby]="
-            fallingFrequencyControl.invalid && fallingFrequencyControl.touched ? 'fallingFrequencyError' : null
+            fallingFrequencyControl.invalid && fallingFrequencyControl.touched
+              ? 'fallingFrequencyError'
+              : null
           "
         />
-        <small id="fallingFrequencyError" *ngIf="fallingFrequencyControl.invalid && fallingFrequencyControl.touched">
+        <small
+          id="fallingFrequencyError"
+          *ngIf="
+            fallingFrequencyControl.invalid && fallingFrequencyControl.touched
+          "
+        >
           Delay between objects.
         </small>
       </label>
@@ -39,10 +61,21 @@
           formControlName="playerSpeed"
           min="1"
           step="1"
-          [attr.aria-invalid]="playerSpeedControl.invalid && playerSpeedControl.touched ? 'true' : null"
-          [attr.aria-describedby]="playerSpeedControl.invalid && playerSpeedControl.touched ? 'playerSpeedError' : null"
+          [attr.aria-invalid]="
+            playerSpeedControl.invalid && playerSpeedControl.touched
+              ? 'true'
+              : null
+          "
+          [attr.aria-describedby]="
+            playerSpeedControl.invalid && playerSpeedControl.touched
+              ? 'playerSpeedError'
+              : null
+          "
         />
-        <small id="playerSpeedError" *ngIf="playerSpeedControl.invalid && playerSpeedControl.touched">
+        <small
+          id="playerSpeedError"
+          *ngIf="playerSpeedControl.invalid && playerSpeedControl.touched"
+        >
           Speed must be positive.
         </small>
       </label>
@@ -53,18 +86,30 @@
           formControlName="gameTime"
           min="5"
           step="1"
-          [attr.aria-invalid]="gameTimeControl.invalid && gameTimeControl.touched ? 'true' : null"
-          [attr.aria-describedby]="gameTimeControl.invalid && gameTimeControl.touched ? 'gameTimeError' : null"
+          [attr.aria-invalid]="
+            gameTimeControl.invalid && gameTimeControl.touched ? 'true' : null
+          "
+          [attr.aria-describedby]="
+            gameTimeControl.invalid && gameTimeControl.touched
+              ? 'gameTimeError'
+              : null
+          "
         />
-        <small id="gameTimeError" *ngIf="gameTimeControl.invalid && gameTimeControl.touched">
+        <small
+          id="gameTimeError"
+          *ngIf="gameTimeControl.invalid && gameTimeControl.touched"
+        >
           Duration must be at least 5 seconds.
         </small>
       </label>
       <div class="actions">
-        <button type="button" (click)="start()" [disabled]="form.invalid">Start</button>
+        <button type="button" (click)="start()" [disabled]="form.invalid">
+          Start
+        </button>
         <button type="button" class="secondary" (click)="stop()">Stop</button>
       </div>
     </form>
+    <!-- Socket feed display for debugging purposes and visualization -->
     <div class="socket" *ngIf="socketPayload$ | async as socketPayload">
       <h3>Pseudo WebSocket Feed</h3>
       <p><strong>Caught objects:</strong> {{ socketPayload.caughtObjects }}</p>
@@ -76,7 +121,9 @@
     <header>
       <div><strong>Score:</strong> {{ game.score }}</div>
       <div><strong>Time:</strong> {{ game.timeRemaining }}s</div>
-      <div class="status" [class.running]="game.running">{{ game.running ? 'Running' : 'Stopped' }}</div>
+      <div class="status" [class.running]="game.running">
+        {{ game.running ? "Running" : "Stopped" }}
+      </div>
     </header>
     <div
       #gameArea
@@ -106,6 +153,12 @@
         [style.height.px]="gameService.dimensions.objectRadius * 2"
       ></div>
     </div>
-    <p class="hint">Use the left/right arrow keys to move. Changing the settings updates the game instantly; altering the game time restarts the round.</p>
+    <div class="hint" [style.width.px]="gameService.dimensions.width">
+      <p>
+        Use the left/right arrow keys to move. <br />Changing the settings
+        updates the game instantly; <br />altering the game time restarts the
+        round.
+      </p>
+    </div>
   </section>
 </div>
