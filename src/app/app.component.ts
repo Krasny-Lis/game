@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, Observable, distinctUntilChanged, filter, map, merge, pairwise, switchMap } from 'rxjs';
+import { EMPTY, Observable, distinctUntilChanged, filter, map, merge, pairwise, shareReplay, switchMap } from 'rxjs';
 import {
   DEFAULT_GAME_SETTINGS,
   FallingObject,
@@ -40,13 +40,15 @@ export class AppComponent implements OnInit, OnDestroy {
   private readonly socketSource$: Observable<SocketPayload> = this.snapshot$.pipe(
     filter((snapshot) => snapshot.running),
     map((snapshot) => ({ caughtObjects: snapshot.score, timeRemaining: snapshot.timeRemaining })),
-    distinctUntilChanged((a, b) => a.caughtObjects === b.caughtObjects && a.timeRemaining === b.timeRemaining)
+    distinctUntilChanged((a, b) => a.caughtObjects === b.caughtObjects && a.timeRemaining === b.timeRemaining),
+    shareReplay({ bufferSize: 1, refCount: true })
   );
 
   private readonly gameStopPayload$: Observable<SocketPayload> = this.snapshot$.pipe(
     pairwise(),
     filter(([previous, current]) => previous.running && !current.running),
-    map(([, current]) => ({ caughtObjects: current.score, timeRemaining: current.timeRemaining }))
+    map(([, current]) => ({ caughtObjects: current.score, timeRemaining: current.timeRemaining })),
+    shareReplay({ bufferSize: 1, refCount: true })
   );
   private lastGameTime: number | null = null;
 
@@ -79,7 +81,7 @@ export class AppComponent implements OnInit, OnDestroy {
         })
       ),
       this.gameStopPayload$
-    );
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
   get fallingSpeedControl(): FormControl<number> {
