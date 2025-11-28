@@ -4,8 +4,10 @@ import { SocketPayload } from '../models/game.models';
 
 @Injectable({ providedIn: 'root' })
 export class GameSocketService implements OnDestroy {
+  private static readonly INITIAL_PAYLOAD: SocketPayload = { caughtObjects: 0, timeRemaining: 0 };
+
   private destroy$ = new Subject<void>();
-  private readonly payloadSubject = new BehaviorSubject<SocketPayload>({ caughtObjects: 0, timeRemaining: 0 });
+  private readonly payloadSubject = new BehaviorSubject<SocketPayload>(GameSocketService.INITIAL_PAYLOAD);
 
   connect(source$: Observable<SocketPayload>): Observable<SocketPayload> {
     this.stop();
@@ -25,6 +27,7 @@ export class GameSocketService implements OnDestroy {
   stop(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.payloadSubject.next(GameSocketService.INITIAL_PAYLOAD);
   }
 
   ngOnDestroy(): void {

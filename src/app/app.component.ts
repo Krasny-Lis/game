@@ -6,11 +6,18 @@ import { FallingObject, GameSettings, GameSnapshot, SocketPayload } from './mode
 import { GameService } from './services/game.service';
 import { GameSocketService } from './services/game-socket.service';
 
-type GameSettingsForm = {
+type GameSettingsControls = {
   fallingSpeed: FormControl<number>;
   fallingFrequency: FormControl<number>;
   playerSpeed: FormControl<number>;
   gameTime: FormControl<number>;
+};
+
+const DEFAULT_SETTINGS: GameSettings = {
+  fallingSpeed: 2,
+  fallingFrequency: 800,
+  playerSpeed: 8,
+  gameTime: 30
 };
 
 const settingsEqual = (a: GameSettings, b: GameSettings): boolean =>
@@ -30,7 +37,7 @@ const settingsEqual = (a: GameSettings, b: GameSettings): boolean =>
 export class AppComponent implements OnInit, OnDestroy {
   readonly snapshot$: Observable<GameSnapshot> = this.gameService.snapshot$;
   socketPayload$?: Observable<SocketPayload>;
-  form: FormGroup<GameSettingsForm>;
+  form: FormGroup<GameSettingsControls>;
 
   private readonly destroy$ = new Subject<void>();
   private lastGameTime: number | null = null;
@@ -41,10 +48,10 @@ export class AppComponent implements OnInit, OnDestroy {
     private readonly gameSocketService: GameSocketService
   ) {
     this.form = this.fb.nonNullable.group({
-      fallingSpeed: this.fb.nonNullable.control(2, [Validators.required, Validators.min(0.5)]),
-      fallingFrequency: this.fb.nonNullable.control(800, [Validators.required, Validators.min(100)]),
-      playerSpeed: this.fb.nonNullable.control(8, [Validators.required, Validators.min(1)]),
-      gameTime: this.fb.nonNullable.control(30, [Validators.required, Validators.min(5)])
+      fallingSpeed: this.fb.nonNullable.control(DEFAULT_SETTINGS.fallingSpeed, [Validators.required, Validators.min(0.5)]),
+      fallingFrequency: this.fb.nonNullable.control(DEFAULT_SETTINGS.fallingFrequency, [Validators.required, Validators.min(100)]),
+      playerSpeed: this.fb.nonNullable.control(DEFAULT_SETTINGS.playerSpeed, [Validators.required, Validators.min(1)]),
+      gameTime: this.fb.nonNullable.control(DEFAULT_SETTINGS.gameTime, [Validators.required, Validators.min(5)])
     });
   }
 
@@ -52,7 +59,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.form.valueChanges
       .pipe(
         filter(() => this.form.valid),
-        map(() => this.form.getRawValue() as GameSettings),
+        map(() => this.form.getRawValue()),
         distinctUntilChanged(settingsEqual),
         takeUntil(this.destroy$)
       )
@@ -64,7 +71,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.form.markAllAsTouched();
       return;
     }
-    const settings = this.form.getRawValue() as GameSettings;
+    const settings = this.form.getRawValue();
     this.lastGameTime = settings.gameTime;
     this.gameService.startGame(settings);
     this.socketPayload$ = this.gameSocketService.connect(
