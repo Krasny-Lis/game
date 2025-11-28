@@ -116,6 +116,11 @@ $object-color: #f97316;
     background: $game-surface;
     border-radius: 8px;
     overflow: hidden;
+
+    &:focus-visible {
+      outline: 2px solid lighten($primary-color, 5%);
+      outline-offset: 2px;
+    }
   }
 
   .player {
