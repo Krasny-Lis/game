@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Observable, Subject, interval, map, shareReplay, startWith, takeUntil, withLatestFrom } from 'rxjs';
+import { Observable, Subject, map, shareReplay, takeUntil, timer, withLatestFrom } from 'rxjs';
 import { SocketPayload } from '../models/game.models';
 
 @Injectable({ providedIn: 'root' })
@@ -8,8 +8,7 @@ export class GameSocketService implements OnDestroy {
 
   createPayloadStream(source$: Observable<SocketPayload>): Observable<SocketPayload> {
     this.resetConnection();
-    return interval(1000).pipe(
-      startWith(0),
+    return timer(0, 1000).pipe(
       withLatestFrom(source$),
       map(([, payload]) => payload),
       takeUntil(this.disconnect$),

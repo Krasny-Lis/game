@@ -1,19 +1,20 @@
 @use '../styles/palette';
+@use '../styles/spacing';
 
 :host {
   font-family: Arial, Helvetica, sans-serif;
   display: block;
-  padding: 16px;
+  padding: spacing.$space-xl;
   color: #0f172a;
 }
 
 .layout {
   display: grid;
   grid-template-columns: 320px 1fr;
-  gap: 16px;
+  gap: spacing.$space-xl;
 
   .settings {
-    padding: 12px;
+    padding: spacing.$space-lg;
     border: 1px solid palette.$border-color;
     border-radius: 8px;
     background: palette.$background-light;
@@ -21,18 +22,18 @@
 
   .form-grid {
     display: grid;
-    gap: 10px;
+    gap: spacing.$space-md;
   }
 
   label {
     display: flex;
     flex-direction: column;
     font-weight: 600;
-    gap: 4px;
+    gap: spacing.$space-2xs;
   }
 
   input[type='number'] {
-    padding: 6px;
+    padding: spacing.$space-xs;
     border-radius: 4px;
     border: 1px solid lighten(palette.$border-color, 10%);
 
@@ -50,10 +51,10 @@
 
   .actions {
     display: flex;
-    gap: 8px;
+    gap: spacing.$space-sm;
 
     button {
-      padding: 8px 12px;
+      padding: spacing.$space-sm spacing.$space-lg;
       border: none;
       border-radius: 4px;
       background: palette.$primary-color;
@@ -78,20 +79,20 @@
 }
 
 .game-panel {
-  padding: 12px;
+  padding: spacing.$space-lg;
   border: 1px solid palette.$border-color;
   border-radius: 8px;
 
   header {
     display: flex;
-    gap: 12px;
+    gap: spacing.$space-lg;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: spacing.$space-lg;
   }
 
   .status {
     margin-left: auto;
-    padding: 4px 8px;
+    padding: spacing.$space-2xs spacing.$space-sm;
     border-radius: 12px;
     background: #f1f5f9;
 
@@ -130,13 +131,13 @@
 
   .hint {
     color: palette.$muted-color;
-    margin-top: 10px;
+    margin-top: spacing.$space-md;
   }
 }
 
 .socket {
-  margin-top: 16px;
-  padding: 10px;
+  margin-top: spacing.$space-xl;
+  padding: spacing.$space-md;
   border-radius: 6px;
   background: palette.$socket-background;
   border: 1px solid palette.$socket-border;
