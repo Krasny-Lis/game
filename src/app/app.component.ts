@@ -123,13 +123,17 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   handleKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      this.gameService.updateDirection(-1);
-    }
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      this.gameService.updateDirection(1);
+    switch (event.key) {
+      case 'ArrowLeft':
+        event.preventDefault();
+        this.gameService.updateDirection(-1);
+        break;
+      case 'ArrowRight':
+        event.preventDefault();
+        this.gameService.updateDirection(1);
+        break;
+      default:
+        break;
     }
   }
 

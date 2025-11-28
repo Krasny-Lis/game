@@ -33,7 +33,9 @@ export class GameService implements OnDestroy {
   private readonly running$ = new BehaviorSubject<boolean>(false);
   private readonly direction$ = new BehaviorSubject<Direction>(0);
 
-  private readonly runningSettings$ = combineLatest([this.running$, this.settings$]);
+  private readonly runningSettings$ = combineLatest([this.running$, this.settings$]).pipe(
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
 
   readonly snapshot$: Observable<GameSnapshot> = combineLatest([
     this.objects$,

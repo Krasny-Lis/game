@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { EMPTY, Observable, Subject, map, shareReplay, takeUntil, timer, withLatestFrom } from 'rxjs';
+import { Observable, Subject, finalize, map, shareReplay, takeUntil, timer, withLatestFrom } from 'rxjs';
 import { SocketPayload } from '../models/game.models';
 
 @Injectable({ providedIn: 'root' })
@@ -14,17 +14,21 @@ export class GameSocketService implements OnDestroy {
       withLatestFrom(source$),
       map(([, payload]) => payload),
       takeUntil(disconnect$),
+      finalize(() => {
+        if (this.activeDisconnect$ === disconnect$) {
+          this.activeDisconnect$ = undefined;
+        }
+      }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 
-  stop(): Observable<never> {
+  stop(): void {
     if (this.activeDisconnect$) {
       this.activeDisconnect$.next();
       this.activeDisconnect$.complete();
       this.activeDisconnect$ = undefined;
     }
-    return EMPTY;
   }
 
   ngOnDestroy(): void {
