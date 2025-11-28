@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, Subject, distinctUntilChanged, filter, map, switchMap } from 'rxjs';
+import { EMPTY, Observable, distinctUntilChanged, filter, map, switchMap } from 'rxjs';
 import {
   DEFAULT_GAME_SETTINGS,
   FallingObject,
@@ -37,7 +37,6 @@ export class AppComponent implements OnInit, OnDestroy {
   @ViewChild('gameArea')
   private readonly gameArea?: ElementRef<HTMLDivElement>;
 
-  private readonly socketTrigger$ = new Subject<void>();
   private readonly socketSource$: Observable<SocketPayload> = this.snapshot$.pipe(
     filter((snapshot) => snapshot.running),
     map((snapshot) => ({ caughtObjects: snapshot.score, timeRemaining: snapshot.timeRemaining })),
@@ -58,8 +57,16 @@ export class AppComponent implements OnInit, OnDestroy {
       gameTime: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.gameTime, [Validators.required, Validators.min(5)])
     });
 
-    this.socketPayload$ = this.socketTrigger$.pipe(
-      switchMap(() => this.gameSocketService.createPayloadStream(this.socketSource$))
+    this.socketPayload$ = this.snapshot$.pipe(
+      map((snapshot) => snapshot.running),
+      distinctUntilChanged(),
+      switchMap((running) => {
+        if (running) {
+          return this.gameSocketService.createPayloadStream(this.socketSource$);
+        }
+        this.gameSocketService.stop();
+        return EMPTY;
+      })
     );
   }
 
@@ -98,7 +105,6 @@ export class AppComponent implements OnInit, OnDestroy {
     const settings = this.form.getRawValue();
     this.lastGameTime = settings.gameTime;
     this.gameService.startGame(settings);
-    this.socketTrigger$.next();
     queueMicrotask(() => this.gameArea?.nativeElement.focus());
   }
 
@@ -138,7 +144,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.socketTrigger$.complete();
     this.gameService.stopGame();
     this.gameSocketService.stop();
   }
