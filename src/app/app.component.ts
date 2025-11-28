@@ -1,8 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable, Subject, distinctUntilChanged, filter, map, switchMap, takeUntil } from 'rxjs';
-import { DEFAULT_GAME_SETTINGS, FallingObject, GameSettings, GameSnapshot, SocketPayload } from './models/game.models';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Observable, Subject, distinctUntilChanged, filter, map, switchMap } from 'rxjs';
+import {
+  DEFAULT_GAME_SETTINGS,
+  FallingObject,
+  GameSettings,
+  GameSnapshot,
+  SocketPayload,
+  settingsEqual
+} from './models/game.models';
 import { GameService } from './services/game.service';
 import { GameSocketService } from './services/game-socket.service';
 
@@ -12,12 +20,6 @@ type GameSettingsControls = {
   playerSpeed: FormControl<number>;
   gameTime: FormControl<number>;
 };
-
-const settingsEqual = (a: GameSettings, b: GameSettings): boolean =>
-  a.fallingSpeed === b.fallingSpeed &&
-  a.fallingFrequency === b.fallingFrequency &&
-  a.playerSpeed === b.playerSpeed &&
-  a.gameTime === b.gameTime;
 
 @Component({
   selector: 'app-root',
@@ -35,7 +37,6 @@ export class AppComponent implements OnInit, OnDestroy {
   @ViewChild('gameArea')
   private readonly gameArea?: ElementRef<HTMLDivElement>;
 
-  private readonly destroy$ = new Subject<void>();
   private readonly socketTrigger$ = new Subject<void>();
   private readonly socketSource$: Observable<SocketPayload> = this.snapshot$.pipe(
     filter((snapshot) => snapshot.running),
@@ -47,7 +48,8 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private readonly fb: FormBuilder,
     readonly gameService: GameService,
-    private readonly gameSocketService: GameSocketService
+    private readonly gameSocketService: GameSocketService,
+    private readonly destroyRef: DestroyRef
   ) {
     this.form = this.fb.nonNullable.group({
       fallingSpeed: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.fallingSpeed, [Validators.required, Validators.min(0.5)]),
@@ -83,7 +85,7 @@ export class AppComponent implements OnInit, OnDestroy {
         filter(() => this.form.valid),
         map(() => this.form.getRawValue()),
         distinctUntilChanged(settingsEqual),
-        takeUntil(this.destroy$)
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((settings) => this.applySettings(settings));
   }
@@ -135,8 +137,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
     this.socketTrigger$.complete();
     this.gameService.stopGame();
     this.gameSocketService.stop();
