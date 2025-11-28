@@ -45,6 +45,12 @@ $object-color: #f97316;
     padding: 6px;
     border-radius: 4px;
     border: 1px solid lighten($border-color, 10%);
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
+      border-color: $primary-color;
+    }
   }
 
   small {
@@ -63,6 +69,11 @@ $object-color: #f97316;
       background: $primary-color;
       color: white;
       cursor: pointer;
+
+      &:focus-visible {
+        outline: 2px solid darken($primary-color, 5%);
+        outline-offset: 2px;
+      }
 
       &.secondary {
         background: $secondary-color;
