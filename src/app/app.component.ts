@@ -68,6 +68,22 @@ export class AppComponent implements OnInit, OnDestroy {
     );
   }
 
+  get fallingSpeedControl(): FormControl<number> {
+    return this.form.controls.fallingSpeed;
+  }
+
+  get fallingFrequencyControl(): FormControl<number> {
+    return this.form.controls.fallingFrequency;
+  }
+
+  get playerSpeedControl(): FormControl<number> {
+    return this.form.controls.playerSpeed;
+  }
+
+  get gameTimeControl(): FormControl<number> {
+    return this.form.controls.gameTime;
+  }
+
   ngOnInit(): void {
     this.form.valueChanges
       .pipe(

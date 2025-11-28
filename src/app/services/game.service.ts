@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, EMPTY, Observable, Subject, combineLatest, filter, interval, map, switchMap, takeUntil, tap } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, Subject, Subscription, combineLatest, filter, interval, map, switchMap, takeUntil, tap } from 'rxjs';
 import { FallingObject, GameSettings, GameSnapshot } from '../models/game.models';
 
 const GAME_WIDTH = 480;
@@ -24,6 +24,7 @@ export class GameService implements OnDestroy {
   private readonly running$ = new BehaviorSubject<boolean>(false);
   private readonly direction$ = new BehaviorSubject<Direction>(0);
   private readonly destroy$ = new Subject<void>();
+  private readonly subscriptions = new Subscription();
 
   private readonly activeSettings$ = this.settings$.pipe(filter(isSettings));
   private readonly runningSettings$ = combineLatest([this.running$, this.activeSettings$]);
@@ -44,32 +45,40 @@ export class GameService implements OnDestroy {
     }))
   );
 
-  private readonly tickSub = this.runningSettings$
-    .pipe(
-      switchMap(([running, settings]) =>
-        running ? interval(TICK_MS).pipe(tap(() => this.advanceFrame(settings))) : EMPTY
-      ),
-      takeUntil(this.destroy$)
-    )
-    .subscribe();
+  constructor() {
+    this.subscriptions.add(
+      this.runningSettings$
+        .pipe(
+          switchMap(([running, settings]) =>
+            running ? interval(TICK_MS).pipe(tap(() => this.advanceFrame(settings))) : EMPTY
+          ),
+          takeUntil(this.destroy$)
+        )
+        .subscribe()
+    );
 
-  private readonly spawnSub = this.runningSettings$
-    .pipe(
-      switchMap(([running, settings]) =>
-        running ? interval(settings.fallingFrequency).pipe(tap(() => this.spawnObject())) : EMPTY
-      ),
-      takeUntil(this.destroy$)
-    )
-    .subscribe();
+    this.subscriptions.add(
+      this.runningSettings$
+        .pipe(
+          switchMap(([running, settings]) =>
+            running ? interval(settings.fallingFrequency).pipe(tap(() => this.spawnObject())) : EMPTY
+          ),
+          takeUntil(this.destroy$)
+        )
+        .subscribe()
+    );
 
-  private readonly timerSub = this.runningSettings$
-    .pipe(
-      switchMap(([running, settings]) =>
-        running ? interval(1000).pipe(tap((elapsed) => this.updateTimer(settings, elapsed + 1))) : EMPTY
-      ),
-      takeUntil(this.destroy$)
-    )
-    .subscribe();
+    this.subscriptions.add(
+      this.runningSettings$
+        .pipe(
+          switchMap(([running, settings]) =>
+            running ? interval(1000).pipe(tap((elapsed) => this.updateTimer(settings, elapsed + 1))) : EMPTY
+          ),
+          takeUntil(this.destroy$)
+        )
+        .subscribe()
+    );
+  }
 
   get dimensions(): Dimensions {
     return { width: GAME_WIDTH, height: GAME_HEIGHT, playerWidth: PLAYER_WIDTH, objectRadius: OBJECT_RADIUS };
@@ -165,9 +174,7 @@ export class GameService implements OnDestroy {
     this.stopGame();
     this.destroy$.next();
     this.destroy$.complete();
-    this.tickSub.unsubscribe();
-    this.spawnSub.unsubscribe();
-    this.timerSub.unsubscribe();
+    this.subscriptions.unsubscribe();
     this.settings$.complete();
     this.playerX$.complete();
     this.objects$.complete();

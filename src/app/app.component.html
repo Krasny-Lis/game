@@ -7,15 +7,13 @@
         <input
           type="number"
           formControlName="fallingSpeed"
-          min="0"
+          min="0.5"
           step="0.5"
-          [attr.aria-invalid]="form.get('fallingSpeed')?.invalid && form.get('fallingSpeed')?.touched ? 'true' : null"
-          [attr.aria-describedby]="
-            form.get('fallingSpeed')?.invalid && form.get('fallingSpeed')?.touched ? 'fallingSpeedError' : null
-          "
+          [attr.aria-invalid]="fallingSpeedControl.invalid && fallingSpeedControl.touched ? 'true' : null"
+          [attr.aria-describedby]="fallingSpeedControl.invalid && fallingSpeedControl.touched ? 'fallingSpeedError' : null"
         />
-        <small id="fallingSpeedError" *ngIf="form.get('fallingSpeed')?.invalid && form.get('fallingSpeed')?.touched">
-          Provide a non-negative speed.
+        <small id="fallingSpeedError" *ngIf="fallingSpeedControl.invalid && fallingSpeedControl.touched">
+          Provide a speed of at least 0.5.
         </small>
       </label>
       <label>
@@ -25,12 +23,12 @@
           formControlName="fallingFrequency"
           min="100"
           step="50"
-          [attr.aria-invalid]="form.get('fallingFrequency')?.invalid && form.get('fallingFrequency')?.touched ? 'true' : null"
+          [attr.aria-invalid]="fallingFrequencyControl.invalid && fallingFrequencyControl.touched ? 'true' : null"
           [attr.aria-describedby]="
-            form.get('fallingFrequency')?.invalid && form.get('fallingFrequency')?.touched ? 'fallingFrequencyError' : null
+            fallingFrequencyControl.invalid && fallingFrequencyControl.touched ? 'fallingFrequencyError' : null
           "
         />
-        <small id="fallingFrequencyError" *ngIf="form.get('fallingFrequency')?.invalid && form.get('fallingFrequency')?.touched">
+        <small id="fallingFrequencyError" *ngIf="fallingFrequencyControl.invalid && fallingFrequencyControl.touched">
           Delay between objects.
         </small>
       </label>
@@ -41,12 +39,10 @@
           formControlName="playerSpeed"
           min="1"
           step="1"
-          [attr.aria-invalid]="form.get('playerSpeed')?.invalid && form.get('playerSpeed')?.touched ? 'true' : null"
-          [attr.aria-describedby]="
-            form.get('playerSpeed')?.invalid && form.get('playerSpeed')?.touched ? 'playerSpeedError' : null
-          "
+          [attr.aria-invalid]="playerSpeedControl.invalid && playerSpeedControl.touched ? 'true' : null"
+          [attr.aria-describedby]="playerSpeedControl.invalid && playerSpeedControl.touched ? 'playerSpeedError' : null"
         />
-        <small id="playerSpeedError" *ngIf="form.get('playerSpeed')?.invalid && form.get('playerSpeed')?.touched">
+        <small id="playerSpeedError" *ngIf="playerSpeedControl.invalid && playerSpeedControl.touched">
           Speed must be positive.
         </small>
       </label>
@@ -57,10 +53,10 @@
           formControlName="gameTime"
           min="5"
           step="1"
-          [attr.aria-invalid]="form.get('gameTime')?.invalid && form.get('gameTime')?.touched ? 'true' : null"
-          [attr.aria-describedby]="form.get('gameTime')?.invalid && form.get('gameTime')?.touched ? 'gameTimeError' : null"
+          [attr.aria-invalid]="gameTimeControl.invalid && gameTimeControl.touched ? 'true' : null"
+          [attr.aria-describedby]="gameTimeControl.invalid && gameTimeControl.touched ? 'gameTimeError' : null"
         />
-        <small id="gameTimeError" *ngIf="form.get('gameTime')?.invalid && form.get('gameTime')?.touched">
+        <small id="gameTimeError" *ngIf="gameTimeControl.invalid && gameTimeControl.touched">
           Duration must be at least 5 seconds.
         </small>
       </label>
