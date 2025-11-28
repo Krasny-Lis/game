@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable, Subject, distinctUntilChanged, filter, map, takeUntil } from 'rxjs';
+import { Observable, Subject, distinctUntilChanged, filter, map, switchMap, takeUntil } from 'rxjs';
 import { FallingObject, GameSettings, GameSnapshot, SocketPayload } from './models/game.models';
 import { GameService } from './services/game.service';
 import { GameSocketService } from './services/game-socket.service';
@@ -36,10 +36,19 @@ const settingsEqual = (a: GameSettings, b: GameSettings): boolean =>
 })
 export class AppComponent implements OnInit, OnDestroy {
   readonly snapshot$: Observable<GameSnapshot> = this.gameService.snapshot$;
-  socketPayload$?: Observable<SocketPayload>;
-  form: FormGroup<GameSettingsControls>;
+  readonly form: FormGroup<GameSettingsControls>;
+  readonly socketPayload$: Observable<SocketPayload>;
+
+  @ViewChild('gameArea')
+  private readonly gameArea?: ElementRef<HTMLDivElement>;
 
   private readonly destroy$ = new Subject<void>();
+  private readonly socketTrigger$ = new Subject<void>();
+  private readonly socketSource$: Observable<SocketPayload> = this.snapshot$.pipe(
+    filter((snapshot) => snapshot.running),
+    map((snapshot) => ({ caughtObjects: snapshot.score, timeRemaining: snapshot.timeRemaining })),
+    distinctUntilChanged((a, b) => a.caughtObjects === b.caughtObjects && a.timeRemaining === b.timeRemaining)
+  );
   private lastGameTime: number | null = null;
 
   constructor(
@@ -53,6 +62,10 @@ export class AppComponent implements OnInit, OnDestroy {
       playerSpeed: this.fb.nonNullable.control(DEFAULT_SETTINGS.playerSpeed, [Validators.required, Validators.min(1)]),
       gameTime: this.fb.nonNullable.control(DEFAULT_SETTINGS.gameTime, [Validators.required, Validators.min(5)])
     });
+
+    this.socketPayload$ = this.socketTrigger$.pipe(
+      switchMap(() => this.gameSocketService.createPayloadStream(this.socketSource$))
+    );
   }
 
   ngOnInit(): void {
@@ -74,13 +87,8 @@ export class AppComponent implements OnInit, OnDestroy {
     const settings = this.form.getRawValue();
     this.lastGameTime = settings.gameTime;
     this.gameService.startGame(settings);
-    this.socketPayload$ = this.gameSocketService.connect(
-      this.snapshot$.pipe(
-        filter((snapshot) => snapshot.running),
-        map((snapshot) => ({ caughtObjects: snapshot.score, timeRemaining: snapshot.timeRemaining })),
-        distinctUntilChanged((a, b) => a.caughtObjects === b.caughtObjects && a.timeRemaining === b.timeRemaining)
-      )
-    );
+    this.socketTrigger$.next();
+    queueMicrotask(() => this.gameArea?.nativeElement.focus());
   }
 
   stop(): void {
@@ -96,7 +104,6 @@ export class AppComponent implements OnInit, OnDestroy {
     this.gameService.updateSettings(settings);
   }
 
-  @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'ArrowLeft') {
       event.preventDefault();
@@ -108,7 +115,6 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  @HostListener('window:keyup', ['$event'])
   handleKeyUp(event: KeyboardEvent): void {
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       this.gameService.updateDirection(0);
@@ -122,6 +128,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.socketTrigger$.complete();
     this.gameService.stopGame();
     this.gameSocketService.stop();
   }

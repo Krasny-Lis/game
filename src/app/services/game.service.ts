@@ -26,6 +26,7 @@ export class GameService implements OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   private readonly activeSettings$ = this.settings$.pipe(filter(isSettings));
+  private readonly runningSettings$ = combineLatest([this.running$, this.activeSettings$]);
 
   readonly snapshot$: Observable<GameSnapshot> = combineLatest([
     this.objects$,
@@ -43,42 +44,30 @@ export class GameService implements OnDestroy {
     }))
   );
 
-  private readonly tickSub = combineLatest([this.activeSettings$, this.running$])
+  private readonly tickSub = this.runningSettings$
     .pipe(
-      switchMap(([settings, running]) =>
-        running
-          ? interval(TICK_MS).pipe(
-              tap(() => this.advanceFrame(settings)),
-              takeUntil(this.destroy$)
-            )
-          : EMPTY
-      )
+      switchMap(([running, settings]) =>
+        running ? interval(TICK_MS).pipe(tap(() => this.advanceFrame(settings))) : EMPTY
+      ),
+      takeUntil(this.destroy$)
     )
     .subscribe();
 
-  private readonly spawnSub = combineLatest([this.activeSettings$, this.running$])
+  private readonly spawnSub = this.runningSettings$
     .pipe(
-      switchMap(([settings, running]) =>
-        running
-          ? interval(settings.fallingFrequency).pipe(
-              tap(() => this.spawnObject()),
-              takeUntil(this.destroy$)
-            )
-          : EMPTY
-      )
+      switchMap(([running, settings]) =>
+        running ? interval(settings.fallingFrequency).pipe(tap(() => this.spawnObject())) : EMPTY
+      ),
+      takeUntil(this.destroy$)
     )
     .subscribe();
 
-  private readonly timerSub = combineLatest([this.activeSettings$, this.running$])
+  private readonly timerSub = this.runningSettings$
     .pipe(
-      switchMap(([settings, running]) =>
-        running
-          ? interval(1000).pipe(
-              tap((elapsed) => this.updateTimer(settings, elapsed + 1)),
-              takeUntil(this.destroy$)
-            )
-          : EMPTY
-      )
+      switchMap(([running, settings]) =>
+        running ? interval(1000).pipe(tap((elapsed) => this.updateTimer(settings, elapsed + 1))) : EMPTY
+      ),
+      takeUntil(this.destroy$)
     )
     .subscribe();
 

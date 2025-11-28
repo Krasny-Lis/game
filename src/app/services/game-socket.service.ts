@@ -1,37 +1,34 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, interval, map, takeUntil, tap, withLatestFrom } from 'rxjs';
+import { Observable, Subject, interval, map, shareReplay, startWith, takeUntil, withLatestFrom } from 'rxjs';
 import { SocketPayload } from '../models/game.models';
 
 @Injectable({ providedIn: 'root' })
 export class GameSocketService implements OnDestroy {
-  private static readonly INITIAL_PAYLOAD: SocketPayload = { caughtObjects: 0, timeRemaining: 0 };
+  private disconnect$ = new Subject<void>();
 
-  private readonly destroy$ = new Subject<void>();
-  private readonly payloadSubject = new BehaviorSubject<SocketPayload>(GameSocketService.INITIAL_PAYLOAD);
-  readonly payload$: Observable<SocketPayload> = this.payloadSubject.asObservable();
-
-  connect(source$: Observable<SocketPayload>): Observable<SocketPayload> {
-    this.stop();
-    interval(1000)
-      .pipe(
-        withLatestFrom(source$),
-        map(([, payload]) => payload),
-        tap((payload) => this.payloadSubject.next(payload)),
-        takeUntil(this.destroy$)
-      )
-      .subscribe();
-
-    return this.payload$;
+  createPayloadStream(source$: Observable<SocketPayload>): Observable<SocketPayload> {
+    this.resetConnection();
+    return interval(1000).pipe(
+      startWith(0),
+      withLatestFrom(source$),
+      map(([, payload]) => payload),
+      takeUntil(this.disconnect$),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
 
   stop(): void {
-    this.destroy$.next();
-    this.payloadSubject.next(GameSocketService.INITIAL_PAYLOAD);
+    this.resetConnection();
   }
 
   ngOnDestroy(): void {
     this.stop();
-    this.destroy$.complete();
-    this.payloadSubject.complete();
+    this.disconnect$.complete();
+  }
+
+  private resetConnection(): void {
+    this.disconnect$.next();
+    this.disconnect$.complete();
+    this.disconnect$ = new Subject<void>();
   }
 }
