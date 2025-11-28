@@ -133,6 +133,13 @@ export class AppComponent implements OnInit, OnDestroy {
       this.start();
       return;
     }
+
+    if (this.lastGameTime !== null) {
+      const { gameTime, ...partialSettings } = settings;
+      this.gameService.updateSettings(partialSettings);
+      return;
+    }
+
     this.gameService.updateSettings(settings);
   }
 
