@@ -1,5 +1,5 @@
-@use '../styles/palette';
-@use '../styles/spacing';
+@use "../styles/palette";
+@use "../styles/spacing";
 
 :host {
   font-family: Arial, Helvetica, sans-serif;
@@ -32,7 +32,7 @@
     gap: spacing.$space-2xs;
   }
 
-  input[type='number'] {
+  input[type="number"] {
     padding: spacing.$space-xs;
     border-radius: 4px;
     border: 1px solid lighten(palette.$border-color, 10%);
@@ -91,7 +91,6 @@
   }
 
   .status {
-    margin-left: auto;
     padding: spacing.$space-2xs spacing.$space-sm;
     border-radius: 12px;
     background: #f1f5f9;

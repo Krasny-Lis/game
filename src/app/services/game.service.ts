@@ -36,7 +36,9 @@ export class GameService implements OnDestroy {
   );
   private readonly objects$ = new BehaviorSubject<FallingObject[]>([]);
   private readonly score$ = new BehaviorSubject<number>(0);
-  private readonly timeRemaining$ = new BehaviorSubject<number>(0);
+  private readonly timeRemaining$ = new BehaviorSubject<number>(
+    DEFAULT_GAME_SETTINGS.gameTime
+  );
   private readonly running$ = new BehaviorSubject<boolean>(false);
   private readonly direction$ = new BehaviorSubject<Direction>(0);
 
@@ -93,7 +95,6 @@ export class GameService implements OnDestroy {
     this.running$.next(false);
     this.direction$.next(0);
     this.objects$.next([]);
-    this.timeRemaining$.next(0);
   }
 
   updateDirection(direction: Direction): void {
@@ -118,7 +119,8 @@ export class GameService implements OnDestroy {
     const updated = this.objects$.value
       .map((object) => ({ ...object, y: object.y + settings.fallingSpeed }))
       .filter(
-        (object) => object.y - GAME_DIMENSIONS.objectRadius < GAME_DIMENSIONS.height
+        (object) =>
+          object.y - GAME_DIMENSIONS.objectRadius < GAME_DIMENSIONS.height
       );
 
     const playerX = this.playerX$.value;
