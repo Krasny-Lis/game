@@ -5,6 +5,7 @@ import { SocketPayload } from '../models/game.models';
 @Injectable({ providedIn: 'root' })
 export class GameSocketService implements OnDestroy {
   private activeDisconnect$?: Subject<void>;
+  private stopTimeoutId?: ReturnType<typeof setTimeout>;
 
   createPayloadStream(source$: Observable<SocketPayload>): Observable<SocketPayload> {
     const disconnect$ = new Subject<void>();
@@ -23,7 +24,22 @@ export class GameSocketService implements OnDestroy {
     );
   }
 
-  stop(): void {
+  stop(delayMs = 0): void {
+    this.cancelPendingStop();
+
+    if (delayMs > 0) {
+      this.stopTimeoutId = setTimeout(() => {
+        this.stopNow();
+        this.stopTimeoutId = undefined;
+      }, delayMs);
+      return;
+    }
+
+    this.stopNow();
+  }
+
+  private stopNow(): void {
+    this.cancelPendingStop();
     if (this.activeDisconnect$) {
       this.activeDisconnect$.next();
       this.activeDisconnect$.complete();
@@ -31,8 +47,15 @@ export class GameSocketService implements OnDestroy {
     }
   }
 
+  private cancelPendingStop(): void {
+    if (this.stopTimeoutId !== undefined) {
+      clearTimeout(this.stopTimeoutId);
+      this.stopTimeoutId = undefined;
+    }
+  }
+
   ngOnDestroy(): void {
-    this.stop();
+    this.stopNow();
     this.activeDisconnect$?.complete();
   }
 }
