@@ -1,4 +1,4 @@
-import { DestroyRef, Injectable, OnDestroy } from '@angular/core';
+import { DestroyRef, Injectable, OnDestroy } from "@angular/core";
 import {
   BehaviorSubject,
   EMPTY,
@@ -8,10 +8,16 @@ import {
   map,
   shareReplay,
   switchMap,
-  tap
-} from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DEFAULT_GAME_SETTINGS, FallingObject, GameSettings, GameSnapshot, settingsEqual } from '../models/game.models';
+  tap,
+} from "rxjs";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import {
+  DEFAULT_GAME_SETTINGS,
+  FallingObject,
+  GameSettings,
+  GameSnapshot,
+  settingsEqual,
+} from "../models/game.models";
 
 const GAME_WIDTH = 480;
 const GAME_HEIGHT = 320;
@@ -19,38 +25,55 @@ const PLAYER_WIDTH = 60;
 const OBJECT_RADIUS = 12;
 const TICK_MS = 16;
 
-type Dimensions = { width: number; height: number; playerWidth: number; objectRadius: number };
+type Dimensions = {
+  width: number;
+  height: number;
+  playerWidth: number;
+  objectRadius: number;
+};
 
 type Direction = -1 | 0 | 1;
 
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class GameService implements OnDestroy {
   private nextObjectId = 0;
-  private readonly settings$ = new BehaviorSubject<GameSettings>(DEFAULT_GAME_SETTINGS);
-  private readonly playerX$ = new BehaviorSubject<number>(GAME_WIDTH / 2 - PLAYER_WIDTH / 2);
+  private readonly settings$ = new BehaviorSubject<GameSettings>(
+    DEFAULT_GAME_SETTINGS
+  );
+  private readonly playerX$ = new BehaviorSubject<number>(
+    GAME_WIDTH / 2 - PLAYER_WIDTH / 2
+  );
   private readonly objects$ = new BehaviorSubject<FallingObject[]>([]);
   private readonly score$ = new BehaviorSubject<number>(0);
   private readonly timeRemaining$ = new BehaviorSubject<number>(0);
   private readonly running$ = new BehaviorSubject<boolean>(false);
   private readonly direction$ = new BehaviorSubject<Direction>(0);
 
-  private readonly runningSettings$ = combineLatest([this.running$, this.settings$]).pipe(
-    shareReplay({ bufferSize: 1, refCount: true })
-  );
+  private readonly runningSettings$ = combineLatest([
+    this.running$,
+    this.settings$,
+  ]).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+
+  readonly dimensions: Dimensions = {
+    width: GAME_WIDTH,
+    height: GAME_HEIGHT,
+    playerWidth: PLAYER_WIDTH,
+    objectRadius: OBJECT_RADIUS,
+  };
 
   readonly snapshot$: Observable<GameSnapshot> = combineLatest([
     this.objects$,
     this.playerX$,
     this.score$,
     this.timeRemaining$,
-    this.running$
+    this.running$,
   ]).pipe(
     map(([objects, playerX, score, timeRemaining, running]) => ({
       objects,
       playerX,
       score,
       timeRemaining,
-      running
+      running,
     })),
     shareReplay({ bufferSize: 1, refCount: true })
   );
@@ -59,7 +82,9 @@ export class GameService implements OnDestroy {
     this.runningSettings$
       .pipe(
         switchMap(([running, settings]) =>
-          running ? interval(TICK_MS).pipe(tap(() => this.advanceFrame(settings))) : EMPTY
+          running
+            ? interval(TICK_MS).pipe(tap(() => this.advanceFrame(settings)))
+            : EMPTY
         ),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -68,7 +93,11 @@ export class GameService implements OnDestroy {
     this.runningSettings$
       .pipe(
         switchMap(([running, settings]) =>
-          running ? interval(settings.fallingFrequency).pipe(tap(() => this.spawnObject())) : EMPTY
+          running
+            ? interval(settings.fallingFrequency).pipe(
+                tap(() => this.spawnObject())
+              )
+            : EMPTY
         ),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -77,22 +106,19 @@ export class GameService implements OnDestroy {
     this.runningSettings$
       .pipe(
         switchMap(([running, settings]) =>
-          running ? interval(1000).pipe(tap((elapsed) => this.updateTimer(settings, elapsed + 1))) : EMPTY
+          running
+            ? interval(1000).pipe(
+                tap((elapsed) => this.updateTimer(settings, elapsed + 1))
+              )
+            : EMPTY
         ),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe();
-  }
-
-  get dimensions(): Dimensions {
-    return { width: GAME_WIDTH, height: GAME_HEIGHT, playerWidth: PLAYER_WIDTH, objectRadius: OBJECT_RADIUS };
   }
 
   updateSettings(partial: Partial<GameSettings>): void {
     const current = this.settings$.value;
-    if (!current) {
-      return;
-    }
     const nextSettings: GameSettings = { ...current, ...partial };
     if (settingsEqual(current, nextSettings)) {
       return;
@@ -144,7 +170,9 @@ export class GameService implements OnDestroy {
 
     const remainingObjects = updated.map((object) => {
       const reachedPlayer = object.y + OBJECT_RADIUS >= GAME_HEIGHT - 24;
-      const overlapX = object.x >= playerX - OBJECT_RADIUS && object.x <= playerX + PLAYER_WIDTH + OBJECT_RADIUS;
+      const overlapX =
+        object.x >= playerX - OBJECT_RADIUS &&
+        object.x <= playerX + PLAYER_WIDTH + OBJECT_RADIUS;
       if (reachedPlayer && overlapX) {
         score += 1;
         return { ...object, caught: true };
@@ -168,7 +196,12 @@ export class GameService implements OnDestroy {
 
   private spawnObject(): void {
     const x = Math.random() * (GAME_WIDTH - OBJECT_RADIUS * 2) + OBJECT_RADIUS;
-    const newObject: FallingObject = { id: ++this.nextObjectId, x, y: 0, caught: false };
+    const newObject: FallingObject = {
+      id: ++this.nextObjectId,
+      x,
+      y: 0,
+      caught: false,
+    };
     this.objects$.next([...this.objects$.value, newObject]);
   }
 
