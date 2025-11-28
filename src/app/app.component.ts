@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, Observable, distinctUntilChanged, filter, map, switchMap } from 'rxjs';
+import { EMPTY, Observable, distinctUntilChanged, filter, map, merge, pairwise, switchMap } from 'rxjs';
 import {
   DEFAULT_GAME_SETTINGS,
   FallingObject,
@@ -42,6 +42,12 @@ export class AppComponent implements OnInit, OnDestroy {
     map((snapshot) => ({ caughtObjects: snapshot.score, timeRemaining: snapshot.timeRemaining })),
     distinctUntilChanged((a, b) => a.caughtObjects === b.caughtObjects && a.timeRemaining === b.timeRemaining)
   );
+
+  private readonly gameStopPayload$: Observable<SocketPayload> = this.snapshot$.pipe(
+    pairwise(),
+    filter(([previous, current]) => previous.running && !current.running),
+    map(([, current]) => ({ caughtObjects: current.score, timeRemaining: current.timeRemaining }))
+  );
   private lastGameTime: number | null = null;
 
   constructor(
@@ -57,16 +63,19 @@ export class AppComponent implements OnInit, OnDestroy {
       gameTime: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.gameTime, [Validators.required, Validators.min(5)])
     });
 
-    this.socketPayload$ = this.snapshot$.pipe(
-      map((snapshot) => snapshot.running),
-      distinctUntilChanged(),
-      switchMap((running) => {
-        if (running) {
-          return this.gameSocketService.createPayloadStream(this.socketSource$);
-        }
-        this.gameSocketService.stop(1000);
-        return EMPTY;
-      })
+    this.socketPayload$ = merge(
+      this.snapshot$.pipe(
+        map((snapshot) => snapshot.running),
+        distinctUntilChanged(),
+        switchMap((running) => {
+          if (running) {
+            return this.gameSocketService.createPayloadStream(this.socketSource$);
+          }
+          this.gameSocketService.stop(1000);
+          return EMPTY;
+        })
+      ),
+      this.gameStopPayload$
     );
   }
 
