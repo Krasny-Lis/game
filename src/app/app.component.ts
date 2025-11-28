@@ -99,9 +99,11 @@ export class AppComponent implements OnInit, OnDestroy {
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'ArrowLeft') {
+      event.preventDefault();
       this.gameService.updateDirection(-1);
     }
     if (event.key === 'ArrowRight') {
+      event.preventDefault();
       this.gameService.updateDirection(1);
     }
   }
