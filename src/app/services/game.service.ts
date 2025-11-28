@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, EMPTY, Observable, Subject, Subscription, combineLatest, filter, interval, map, switchMap, takeUntil, tap } from 'rxjs';
-import { FallingObject, GameSettings, GameSnapshot } from '../models/game.models';
+import { BehaviorSubject, EMPTY, Observable, Subject, Subscription, combineLatest, interval, map, switchMap, takeUntil, tap } from 'rxjs';
+import { DEFAULT_GAME_SETTINGS, FallingObject, GameSettings, GameSnapshot } from '../models/game.models';
 
 const GAME_WIDTH = 480;
 const GAME_HEIGHT = 320;
@@ -12,11 +12,9 @@ type Dimensions = { width: number; height: number; playerWidth: number; objectRa
 
 type Direction = -1 | 0 | 1;
 
-const isSettings = (settings: GameSettings | null): settings is GameSettings => settings !== null;
-
 @Injectable({ providedIn: 'root' })
 export class GameService implements OnDestroy {
-  private readonly settings$ = new BehaviorSubject<GameSettings | null>(null);
+  private readonly settings$ = new BehaviorSubject<GameSettings>(DEFAULT_GAME_SETTINGS);
   private readonly playerX$ = new BehaviorSubject<number>(GAME_WIDTH / 2 - PLAYER_WIDTH / 2);
   private readonly objects$ = new BehaviorSubject<FallingObject[]>([]);
   private readonly score$ = new BehaviorSubject<number>(0);
@@ -26,8 +24,7 @@ export class GameService implements OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private readonly subscriptions = new Subscription();
 
-  private readonly activeSettings$ = this.settings$.pipe(filter(isSettings));
-  private readonly runningSettings$ = combineLatest([this.running$, this.activeSettings$]);
+  private readonly runningSettings$ = combineLatest([this.running$, this.settings$]);
 
   readonly snapshot$: Observable<GameSnapshot> = combineLatest([
     this.objects$,
