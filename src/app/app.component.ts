@@ -105,6 +105,7 @@ export class AppComponent implements OnInit, OnDestroy {
   stop(): void {
     this.gameService.stopGame();
     this.gameSocketService.stop();
+    this.lastGameTime = null;
   }
 
   private applySettings(settings: GameSettings): void {

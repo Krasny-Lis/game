@@ -1,18 +1,16 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { DestroyRef, Injectable, OnDestroy } from '@angular/core';
 import {
   BehaviorSubject,
   EMPTY,
   Observable,
-  Subject,
-  Subscription,
   combineLatest,
   interval,
   map,
   shareReplay,
   switchMap,
-  takeUntil,
   tap
 } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DEFAULT_GAME_SETTINGS, FallingObject, GameSettings, GameSnapshot, settingsEqual } from '../models/game.models';
 
 const GAME_WIDTH = 480;
@@ -34,8 +32,6 @@ export class GameService implements OnDestroy {
   private readonly timeRemaining$ = new BehaviorSubject<number>(0);
   private readonly running$ = new BehaviorSubject<boolean>(false);
   private readonly direction$ = new BehaviorSubject<Direction>(0);
-  private readonly destroy$ = new Subject<void>();
-  private readonly subscriptions = new Subscription();
 
   private readonly runningSettings$ = combineLatest([this.running$, this.settings$]);
 
@@ -56,39 +52,33 @@ export class GameService implements OnDestroy {
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
-  constructor() {
-    this.subscriptions.add(
-      this.runningSettings$
-        .pipe(
-          switchMap(([running, settings]) =>
-            running ? interval(TICK_MS).pipe(tap(() => this.advanceFrame(settings))) : EMPTY
-          ),
-          takeUntil(this.destroy$)
-        )
-        .subscribe()
-    );
+  constructor(private readonly destroyRef: DestroyRef) {
+    this.runningSettings$
+      .pipe(
+        switchMap(([running, settings]) =>
+          running ? interval(TICK_MS).pipe(tap(() => this.advanceFrame(settings))) : EMPTY
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
 
-    this.subscriptions.add(
-      this.runningSettings$
-        .pipe(
-          switchMap(([running, settings]) =>
-            running ? interval(settings.fallingFrequency).pipe(tap(() => this.spawnObject())) : EMPTY
-          ),
-          takeUntil(this.destroy$)
-        )
-        .subscribe()
-    );
+    this.runningSettings$
+      .pipe(
+        switchMap(([running, settings]) =>
+          running ? interval(settings.fallingFrequency).pipe(tap(() => this.spawnObject())) : EMPTY
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
 
-    this.subscriptions.add(
-      this.runningSettings$
-        .pipe(
-          switchMap(([running, settings]) =>
-            running ? interval(1000).pipe(tap((elapsed) => this.updateTimer(settings, elapsed + 1))) : EMPTY
-          ),
-          takeUntil(this.destroy$)
-        )
-        .subscribe()
-    );
+    this.runningSettings$
+      .pipe(
+        switchMap(([running, settings]) =>
+          running ? interval(1000).pipe(tap((elapsed) => this.updateTimer(settings, elapsed + 1))) : EMPTY
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   get dimensions(): Dimensions {
@@ -186,9 +176,6 @@ export class GameService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.stopGame();
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.subscriptions.unsubscribe();
     this.settings$.complete();
     this.playerX$.complete();
     this.objects$.complete();
