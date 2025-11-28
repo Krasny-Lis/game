@@ -64,7 +64,7 @@ export class AppComponent implements OnInit, OnDestroy {
         if (running) {
           return this.gameSocketService.createPayloadStream(this.socketSource$);
         }
-        this.gameSocketService.stop();
+        this.gameSocketService.stop(1000);
         return EMPTY;
       })
     );
@@ -110,7 +110,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   stop(): void {
     this.gameService.stopGame();
-    this.gameSocketService.stop();
+    this.gameSocketService.stop(1000);
     this.lastGameTime = null;
   }
 
