@@ -9,6 +9,8 @@ export const GAME_DIMENSIONS = {
   width: 480,
   height: 320,
   playerWidth: 60,
+  playerHeight: 16,
+  playerOffset: 8,
   objectRadius: 12
 } as const;
 
