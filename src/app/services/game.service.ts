@@ -105,12 +105,8 @@ export class GameService implements OnDestroy {
 
     this.runningSettings$
       .pipe(
-        switchMap(([running, settings]) =>
-          running
-            ? interval(1000).pipe(
-                tap((elapsed) => this.updateTimer(settings, elapsed + 1))
-              )
-            : EMPTY
+        switchMap(([running]) =>
+          running ? interval(1000).pipe(tap(() => this.updateTimer())) : EMPTY
         ),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -205,8 +201,8 @@ export class GameService implements OnDestroy {
     this.objects$.next([...this.objects$.value, newObject]);
   }
 
-  private updateTimer(settings: GameSettings, elapsedSeconds: number): void {
-    const remaining = Math.max(settings.gameTime - elapsedSeconds, 0);
+  private updateTimer(): void {
+    const remaining = Math.max(this.timeRemaining$.value - 1, 0);
     this.timeRemaining$.next(remaining);
     if (remaining <= 0) {
       this.stopGame();
