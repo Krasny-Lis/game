@@ -5,6 +5,13 @@ export interface GameSettings {
   gameTime: number;
 }
 
+export const DEFAULT_GAME_SETTINGS: GameSettings = {
+  fallingSpeed: 2,
+  fallingFrequency: 800,
+  playerSpeed: 8,
+  gameTime: 30
+};
+
 export interface FallingObject {
   id: number;
   x: number;

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, Subject, distinctUntilChanged, filter, map, switchMap, takeUntil } from 'rxjs';
-import { FallingObject, GameSettings, GameSnapshot, SocketPayload } from './models/game.models';
+import { DEFAULT_GAME_SETTINGS, FallingObject, GameSettings, GameSnapshot, SocketPayload } from './models/game.models';
 import { GameService } from './services/game.service';
 import { GameSocketService } from './services/game-socket.service';
 
@@ -11,13 +11,6 @@ type GameSettingsControls = {
   fallingFrequency: FormControl<number>;
   playerSpeed: FormControl<number>;
   gameTime: FormControl<number>;
-};
-
-const DEFAULT_SETTINGS: GameSettings = {
-  fallingSpeed: 2,
-  fallingFrequency: 800,
-  playerSpeed: 8,
-  gameTime: 30
 };
 
 const settingsEqual = (a: GameSettings, b: GameSettings): boolean =>
@@ -57,10 +50,10 @@ export class AppComponent implements OnInit, OnDestroy {
     private readonly gameSocketService: GameSocketService
   ) {
     this.form = this.fb.nonNullable.group({
-      fallingSpeed: this.fb.nonNullable.control(DEFAULT_SETTINGS.fallingSpeed, [Validators.required, Validators.min(0.5)]),
-      fallingFrequency: this.fb.nonNullable.control(DEFAULT_SETTINGS.fallingFrequency, [Validators.required, Validators.min(100)]),
-      playerSpeed: this.fb.nonNullable.control(DEFAULT_SETTINGS.playerSpeed, [Validators.required, Validators.min(1)]),
-      gameTime: this.fb.nonNullable.control(DEFAULT_SETTINGS.gameTime, [Validators.required, Validators.min(5)])
+      fallingSpeed: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.fallingSpeed, [Validators.required, Validators.min(0.5)]),
+      fallingFrequency: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.fallingFrequency, [Validators.required, Validators.min(100)]),
+      playerSpeed: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.playerSpeed, [Validators.required, Validators.min(1)]),
+      gameTime: this.fb.nonNullable.control(DEFAULT_GAME_SETTINGS.gameTime, [Validators.required, Validators.min(5)])
     });
 
     this.socketPayload$ = this.socketTrigger$.pipe(
