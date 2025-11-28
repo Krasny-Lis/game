@@ -25,6 +25,7 @@ type Direction = -1 | 0 | 1;
 
 @Injectable({ providedIn: 'root' })
 export class GameService implements OnDestroy {
+  private nextObjectId = 0;
   private readonly settings$ = new BehaviorSubject<GameSettings>(DEFAULT_GAME_SETTINGS);
   private readonly playerX$ = new BehaviorSubject<number>(GAME_WIDTH / 2 - PLAYER_WIDTH / 2);
   private readonly objects$ = new BehaviorSubject<FallingObject[]>([]);
@@ -125,6 +126,7 @@ export class GameService implements OnDestroy {
   }
 
   private resetState(settings: GameSettings): void {
+    this.nextObjectId = 0;
     this.objects$.next([]);
     this.score$.next(0);
     this.timeRemaining$.next(settings.gameTime);
@@ -166,7 +168,7 @@ export class GameService implements OnDestroy {
 
   private spawnObject(): void {
     const x = Math.random() * (GAME_WIDTH - OBJECT_RADIUS * 2) + OBJECT_RADIUS;
-    const newObject: FallingObject = { id: Date.now() + Math.floor(Math.random() * 1000), x, y: 0, caught: false };
+    const newObject: FallingObject = { id: ++this.nextObjectId, x, y: 0, caught: false };
     this.objects$.next([...this.objects$.value, newObject]);
   }
 
