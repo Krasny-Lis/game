@@ -179,5 +179,12 @@ export class GameService implements OnDestroy {
     this.tickSub.unsubscribe();
     this.spawnSub.unsubscribe();
     this.timerSub.unsubscribe();
+    this.settings$.complete();
+    this.playerX$.complete();
+    this.objects$.complete();
+    this.score$.complete();
+    this.timeRemaining$.complete();
+    this.running$.complete();
+    this.direction$.complete();
   }
 }
