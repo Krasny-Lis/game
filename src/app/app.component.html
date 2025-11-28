@@ -88,6 +88,7 @@
       [style.height.px]="gameService.dimensions.height"
       (keydown)="handleKeyDown($event)"
       (keyup)="handleKeyUp($event)"
+      (blur)="handleBlur()"
     >
       <div
         class="player"
