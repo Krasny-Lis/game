@@ -113,10 +113,12 @@ export class GameService implements OnDestroy {
   stopGame(): void {
     this.running$.next(false);
     this.direction$.next(0);
+    this.objects$.next([]);
+    this.timeRemaining$.next(0);
   }
 
   updateDirection(direction: Direction): void {
-    if (!this.running$.value) {
+    if (!this.running$.value || this.direction$.value === direction) {
       return;
     }
     this.direction$.next(direction);
