@@ -133,6 +133,7 @@
       aria-label="Catch the falling objects game area"
       [style.width.px]="gameService.dimensions.width"
       [style.height.px]="gameService.dimensions.height"
+      [style.--object-size.px]="gameService.dimensions.objectRadius * 2"
       (keydown)="handleKeyDown($event)"
       (keyup)="handleKeyUp($event)"
       (blur)="handleBlur()"
@@ -149,8 +150,6 @@
         *ngFor="let obj of game.objects; trackBy: trackByObject"
         [style.left.px]="obj.x"
         [style.top.px]="obj.y"
-        [style.width.px]="gameService.dimensions.objectRadius * 2"
-        [style.height.px]="gameService.dimensions.objectRadius * 2"
       ></div>
     </div>
     <div class="hint" [style.width.px]="gameService.dimensions.width">
