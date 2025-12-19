@@ -18,6 +18,8 @@ export interface GameState {
   nextObjectId: number;
 }
 
+export const DEFAULT_DIRECTION: Direction = 0;
+
 export const initialGameState: GameState = {
   settings: DEFAULT_GAME_SETTINGS,
   playerX: getInitialPlayerX(GAME_DIMENSIONS),
@@ -25,6 +27,6 @@ export const initialGameState: GameState = {
   score: 0,
   timeRemaining: DEFAULT_GAME_SETTINGS.gameTime,
   running: false,
-  direction: 0,
+  direction: DEFAULT_DIRECTION,
   nextObjectId: 0,
 };

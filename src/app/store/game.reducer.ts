@@ -1,20 +1,27 @@
 import { createReducer, on } from "@ngrx/store";
 import { GAME_DIMENSIONS } from "../models/game.models";
-import { advanceObjects, resolveObjectCatches, spawnObject } from "../logic/object.logic";
+import {
+  advanceObjects,
+  resolveObjectCatches,
+  spawnObject,
+} from "../logic/object.logic";
 import { movePlayer, getInitialPlayerX } from "../logic/player.logic";
 import { gameActions } from "./game.actions";
-import { GameState, initialGameState } from "./game.state";
+import { DEFAULT_DIRECTION, GameState, initialGameState } from "./game.state";
 
 const clampTimeRemaining = (value: number): number => Math.max(value, 0);
 
-const resetState = (state: GameState, settings: GameState["settings"]): GameState => ({
+const resetState = (
+  state: GameState,
+  settings: GameState["settings"]
+): GameState => ({
   ...state,
   settings: { ...settings },
   playerX: getInitialPlayerX(GAME_DIMENSIONS),
   objects: [],
   score: 0,
   timeRemaining: settings.gameTime,
-  direction: 0,
+  direction: DEFAULT_DIRECTION,
   running: true,
   nextObjectId: 0,
 });
@@ -34,11 +41,13 @@ export const gameReducer = createReducer(
       timeRemaining,
     };
   }),
-  on(gameActions.startGame, (state, { settings }) => resetState(state, settings)),
+  on(gameActions.startGame, (state, { settings }) =>
+    resetState(state, settings)
+  ),
   on(gameActions.stopGame, (state) => ({
     ...state,
     running: false,
-    direction: 0,
+    direction: DEFAULT_DIRECTION,
     objects: [],
   })),
   on(gameActions.updateDirection, (state, { direction }) => {
@@ -99,7 +108,7 @@ export const gameReducer = createReducer(
       return {
         ...state,
         running: false,
-        direction: 0,
+        direction: DEFAULT_DIRECTION,
         objects: [],
       };
     }
