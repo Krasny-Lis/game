@@ -1,11 +1,4 @@
 import { createReducer, on } from "@ngrx/store";
-import { GAME_DIMENSIONS } from "../models/game.models";
-import {
-  advanceObjects,
-  resolveObjectCatches,
-  spawnObject,
-} from "../logic/object.logic";
-import { movePlayer, getInitialPlayerX } from "../logic/player.logic";
 import { gameActions } from "./game.actions";
 import { GameState, initialGameState } from "./game.state";
 import { onUpdateSettings } from "./reducer/game-settings.reducer";
