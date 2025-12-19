@@ -36,6 +36,8 @@ export interface FallingObject {
   caught: boolean;
 }
 
+export type Direction = -1 | 0 | 1;
+
 export interface GameSnapshot {
   objects: FallingObject[];
   playerX: number;

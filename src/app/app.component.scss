@@ -123,6 +123,8 @@
     background: palette.$object-color;
     border-radius: 50%;
     transform: translate(-50%, 0);
+    width: var(--object-size);
+    height: var(--object-size);
   }
 
   .hint {
