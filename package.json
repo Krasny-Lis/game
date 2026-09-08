@@ -1,6 +1,21 @@
 {
   "name": "angular-slot-game",
   "version": "1.0.0",
+  "description": "Reactive Angular mini-game built with NgRx, RxJS and configurable real-time gameplay.",
+  "private": true,
+  "homepage": "https://krasny-lis.github.io/game/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Krasny-Lis/game.git"
+  },
+  "keywords": [
+    "angular",
+    "typescript",
+    "ngrx",
+    "rxjs",
+    "browser-game",
+    "github-pages"
+  ],
   "scripts": {
     "start": "ng serve --open",
     "build": "ng build",
@@ -8,7 +23,6 @@
     "test:pages": "node --test scripts/pages.test.mjs",
     "lint": "ng lint"
   },
-  "private": true,
   "dependencies": {
     "@angular/animations": "^17.3.0",
     "@angular/common": "^17.3.0",
