@@ -1,62 +1,73 @@
-# Slots Mini-Game
+# Catch the Falling Objects — Angular Mini-Game
 
-A simple Angular mini-game where you move a rectangle to catch falling balls. Game parameters are configured through a reactive settings form, with live updates and a pseudo WebSocket feed that emits game state every second.
+[![Build and deploy game to GitHub Pages](https://github.com/Krasny-Lis/game/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/Krasny-Lis/game/actions/workflows/deploy-pages.yml)
 
-## Features
-- Reactive settings form that instantly updates game parameters (falling speed, spawn frequency, player speed, game length).
-- Game automatically restarts when the game time changes.
-- Keyboard controls (arrow keys) to move the player.
-- Collision detection and score counter for caught objects.
-- Pseudo WebSocket updates every second showing objects caught and time remaining.
+Configurable browser mini-game built with Angular, NgRx and RxJS. The player moves horizontally to catch falling objects while reactive streams control gameplay, timing and a simulated live-status feed.
 
-## Getting Started
-The current Angular 17 toolchain uses Node.js 20 in CI. Both are legacy versions;
-upgrading Angular and Node.js together is recommended as a separate maintenance task.
+**Live demo:** https://krasny-lis.github.io/game/
 
-1. Install dependencies:
-   ```bash
-   npm ci
-   ```
-2. Run the development server:
-   ```bash
-   npm start
-   ```
-3. Open your browser at the provided URL (default: http://localhost:4200/).
+## What this project demonstrates
 
-### Controls
-- **Left/Right Arrow Keys**: Move the player horizontally to catch falling objects.
+- reactive game state managed with NgRx
+- timer and animation events modeled as actions and effects
+- typed reactive-form controls with live configuration updates
+- RxJS streams for game snapshots and periodic status messages
+- immutable reducers separated by responsibility
+- keyboard interaction and programmatic focus management
+- strict TypeScript configuration
+- automated linting, production build and static-output verification
 
-## GitHub Pages
+## Gameplay
 
-Deployment URL (available after the first successful deployment):
-https://krasny-lis.github.io/game/
+1. Configure falling speed, spawn frequency, player speed and game duration.
+2. Start the game.
+3. Use the left and right arrow keys to move the player.
+4. Catch as many falling objects as possible before the timer reaches zero.
 
-1. Open the repository's **Settings → Pages** and select **GitHub Actions** as the source.
-2. Merge the deployment configuration into `main`. Each push to `main` runs lint,
-   builds the app, checks the generated asset paths, and publishes the static output.
-3. Watch **Actions → Build and deploy game to GitHub Pages**. Both `build` and
-   `deploy` must finish successfully.
-4. To republish without changing code, select **Run workflow** on `main`.
+Changing most settings updates the running game immediately. Changing the game duration restarts the session with the new value.
 
-Pull requests run the build checks but do not publish the site.
+## Technology stack
 
-To verify the Pages build locally:
+| Area | Technology |
+| --- | --- |
+| Application | Angular 17, TypeScript |
+| State | NgRx Store and Effects |
+| Reactive logic | RxJS |
+| Forms | Angular typed reactive forms |
+| Quality | Angular ESLint, strict TypeScript |
+| Hosting | GitHub Pages |
+
+## Architecture notes
+
+The UI reads a derived `GameSnapshot` stream. User actions are dispatched through `GameService`, while reducers and effects handle settings, frame updates, object spawning and the timer.
+
+`GameSocketService` simulates a WebSocket-like feed by publishing the current score and remaining time every second. It does not connect to an external server.
+
+## Run locally
+
+The current Angular 17 toolchain uses Node.js 20.
 
 ```bash
 npm ci
+npm start
+```
+
+## Quality checks
+
+```bash
 npm run lint
 npm run build:pages
 npm run test:pages
 ```
 
-The published directory is `dist/slot-game/browser`, not its parent directory.
-The Pages build sets `<base href="/game/">` so scripts and styles load correctly
-from the repository subdirectory. Local development still uses `/`.
-The static-output checks verify generated paths and files, not gameplay in a browser.
+`test:pages` verifies the generated static files and asset paths. The repository does not currently contain gameplay unit tests.
 
-The app has no server or real WebSocket connection. Its pseudo WebSocket feed is
-an RxJS stream running locally in the browser, so no backend hosting is required.
+## Deployment
 
-## Notes
-- The project uses strict TypeScript options and reactive programming with RxJS.
-- Animations are kept simple for clarity; focus is on reactive logic and configuration.
+Pull requests to `main` run linting, the GitHub Pages build and static-output checks. A push to `main` also deploys `dist/slot-game/browser`.
+
+The production build uses `/game/` as its base path. Local development continues to use `/`.
+
+## Project status
+
+Complete portfolio demo. A future Angular upgrade and gameplay unit tests are maintenance improvements, not requirements for the current release.
