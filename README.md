@@ -1,4 +1,4 @@
-# Catch the Falling Objects — Angular Mini-Game
+# Catch the Falling Objects – Angular Mini-Game
 
 [![Build and deploy game to GitHub Pages](https://github.com/Krasny-Lis/game/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/Krasny-Lis/game/actions/workflows/deploy-pages.yml)
 
